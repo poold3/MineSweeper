@@ -1,5 +1,4 @@
-Notes for MineSweeper:
-[ ] - Cell content unknown
-[e] - Cell is empty
+[*] - Cell content unknown/Cell may contain mine
+[ ] - Cell is verified to be empty
 [f] - Cell is flagged
-[x] - Cell is surrounded by x mines. Domain:1-8
+[x] - Cell is surrounded by x number of mines. Domain:{1-8}

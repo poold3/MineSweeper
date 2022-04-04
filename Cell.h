@@ -4,31 +4,36 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <fstream>
+#include <sstream>
 
 using namespace std;
 
-class Field {
+class Cell {
 private:
     string value;
-    int rowPosition;
-    int columnPosition;
+    int position;
 
 public:
-    Cell (string value, int rowPosition, int columnPosition) {
-        this.value = value;
-        this.rowPosition = rowPosition;
-        this.columnPosition = columnPosition;
+    Cell (string value, int position) {
+        this->value = value;
+        this->position = position;
     }
 
     Cell () {
-        this.value = " ";
-        this.rowPosition = 0;
-        this.columnPosition = 0;
+        this->value = " ";
+        this->position = 0;
     }
 
-    toString() {
-        
+    string getValue() {
+        return value;
+    }
+
+    void update (string value) {
+        this->value = value;
+    }
+
+    void toString() {
+        cout << "[" << value << "]";
     }
 
 
