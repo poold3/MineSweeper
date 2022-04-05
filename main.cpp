@@ -37,6 +37,7 @@ int main(int argc, char* argv[]) {
         }
         else {
             cout << "Not found. Please make sure your directory contains \"example.txt\"." << endl;
+            cout << "You can find all program files at https://github.com/poold3/MineSweeper" << endl;
         }
         in.close();
         cout << endl << "Exiting!" << endl;
