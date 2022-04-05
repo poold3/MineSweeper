@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
     }
     catch(exception& e) {
         cout << endl << e.what() << endl << endl;
-        cout << "Exiting!!" << endl;
+        cout << "Exiting!" << endl;
         return 0;
     }
 

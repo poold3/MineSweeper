@@ -43,27 +43,21 @@ public:
                     if (inputLine.at(0) == '[') {
                         tokens.push('[');
                         ++countCells;
-                        //cout << "Added [" << endl;
                     }
                     else if (inputLine.at(0) == ']') {
                         tokens.push(']');
-                        //cout << "Added [" << endl;
                     }
                     else if (inputLine.at(0) == 'f') {
                         tokens.push('f');
-                        //cout << "Added ]" << endl;
                     }
                     else if (inputLine.at(0) == ' ') {
                         tokens.push(' ');
-                        //cout << "Added space" << endl;
                     }
                     else if (inputLine.at(0) == '*') {
                         tokens.push('*');
-                        //cout << "Added *" << endl;
                     }
                     else if (isdigit(inputLine.at(0)) && inputLine.at(0)-48 > 0 && inputLine.at(0)-48 < 9) {
                         tokens.push(inputLine.at(0));
-                        //cout << "Added " << inputLine.at(0) << endl;
                     }
                     else {
                         string error = "Invalid character detected: ";
