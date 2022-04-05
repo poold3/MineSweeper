@@ -10,25 +10,25 @@ using namespace std;
 
 class Cell {
 private:
-    string value;
+    char value;
     int position;
 
 public:
-    Cell (string value, int position) {
+    Cell (char value, int position) {
         this->value = value;
         this->position = position;
     }
 
     Cell () {
-        this->value = " ";
+        this->value = ' ';
         this->position = 0;
     }
 
-    string getValue() {
+    char getValue() {
         return value;
     }
 
-    void update (string value) {
+    void update (char value) {
         this->value = value;
     }
 

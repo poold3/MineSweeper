@@ -17,11 +17,11 @@ private:
     int columns;
 
 public:
-    Field (int rows, int columns) {
+    Field (int rows, int columns, vector<char> values) {
         this->rows = rows;
         this->columns = columns;
         for (int i = 0; i < rows * columns; ++i) {
-            Cell cell(" ", i);
+            Cell cell(values.at(i), i);
             cells.push_back(cell);
         }
     }
@@ -34,16 +34,14 @@ public:
         return cells.at((rowPosition * columns) + columnPosition);
     }
 
-    void update(int rowPosition, int columnPosition, string value) {
+    void update(int rowPosition, int columnPosition, char value) {
         cells.at((rowPosition * columns) + columnPosition).update(value);
     }
 
     void toString() {
-        cout << "Current Field" << endl;
         for (int i = 0; i < rows; ++i) {
             for (int j = 0; j < columns; ++j) {
                 cells.at((i * columns) + j).toString();
-                cout << " ";
             }
             cout << endl;
         }

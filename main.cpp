@@ -1,8 +1,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <queue>
 #include <fstream>
 
+#include "Scanner.h"
+#include "Parser.h"
 #include "Field.h"
 
 using namespace std;
@@ -43,14 +46,14 @@ int main(int argc, char* argv[]) {
         cout << endl << "Exiting!" << endl;
         return 0;
     }
-    const string inputFile = argv[1];
-    Field field;
 
+    //Load inputFile and verify that it can be opened
+    const string inputFile = argv[1];
     ifstream infile;
     string inputLine;
     infile.open(inputFile);
     if (infile.is_open()) {
-        cout << "Current Field:" << endl;
+        cout << "Input Field:" << endl;
         while(getline(infile, inputLine)) {
             cout << inputLine << endl;
         }
@@ -62,6 +65,42 @@ int main(int argc, char* argv[]) {
     }
     infile.close();
 
+    //Run Scanner on inputFile to verify validity of characters
+    Scanner scanner(inputFile);
+    try {
+        cout << "\nRunning scan on field characters . . ." << endl;
+        scanner.scanField();
+        cout << "\nField scan complete! No invalid characters detected." << endl;
+    }
+    catch(exception& e) {
+        cout << endl << e.what() << endl << endl;
+        cout << "Exiting!!" << endl;
+        return 0;
+    }
+    
+    //Run Parser on tokens to verify validity of character order
+    queue<char> tokens = scanner.getTokens();
+    Parser parser(tokens);
+    try {
+        cout << "\nRunning scan on field character order . . ." << endl;
+        parser.scanTokens();
+        cout << "\nField scan complete! All characters are in the correct order." << endl;
+    }
+    catch(exception& e) {
+        cout << endl << e.what() << endl << endl;
+        cout << "Exiting!!" << endl;
+        return 0;
+    }
+
+    //Get all neccessary information and create the minefield
+    int rows = scanner.getRows();
+    int columns = scanner.getColumns();
+    vector<char> values = parser.getValues();
+    Field field(rows, columns, values);
+
+    cout << "\nLoaded Field:" << endl;
+    field.toString();
+    cout << endl;
     
 
     return 0;
