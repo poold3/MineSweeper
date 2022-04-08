@@ -101,7 +101,12 @@ int main(int argc, char* argv[]) {
     cout << "\nLoaded Field:" << endl;
     field.toString();
     cout << endl;
-    
+    Field newField = field.evaluate();
+    newField.toString();
+    cout << endl << endl;
+    field.toString();
+
+    cout << field.at(1).getValue() << endl;
 
     return 0;
 }

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <fstream>
+#include <set>
 
 #include "Cell.h"
 
@@ -25,13 +25,26 @@ public:
             cells.push_back(cell);
         }
     }
+    Field (int rows, int columns, vector<Cell> cells) {
+        this->rows = rows;
+        this->columns = columns;
+        this->cells = cells;
+    }
     Field () {
         this->rows = 0;
         this->columns = 0;
     }
 
-    Cell at(int rowPosition, int columnPosition) {
+    int size() {
+        return cells.size();
+    }
+
+    Cell& at(int rowPosition, int columnPosition) {
         return cells.at((rowPosition * columns) + columnPosition);
+    }
+
+    Cell& at(int position) {
+        return cells.at(position);
     }
 
     void update(int rowPosition, int columnPosition, char value) {
@@ -47,6 +60,24 @@ public:
         }
     }
 
+    Field evaluate() {
+        Field newField(rows, columns, cells);
+        /*
+            First, we need to identify the Strongly Connected Components (SCCs). We will
+        perform a depth first search for all cells with a number value. An SCC is made up of 
+        cells that are within 2 cells of each other. Basically, this organizes the numbered cells
+        into groups where every member of the group can have an effect on all other members.
+        
+            We will run a fixed-point algorithm on each SCC until there are no new changes
+        being made.
+        */
+        Set<int> cellsVisited;
+        for (int i = 0; i < newField.size(); ++i) {
+
+        }
+
+        return newField;
+    }
 
 };
 

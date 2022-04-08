@@ -28,8 +28,8 @@ public:
         return value;
     }
 
-    void update (char value) {
-        this->value = value;
+    void update (char newValue) {
+        value = newValue;
     }
 
     void toString() {
