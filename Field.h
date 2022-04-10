@@ -19,7 +19,8 @@ private:
     int right = 1;
     int top;
     int bottom;
-    
+    vector<int> adjacentNumberPositionIncrements;
+    vector<int> adjacentMinePositionIncrements;
 
 public:
     Field (int rows, int columns, vector<char> values) {
@@ -33,6 +34,13 @@ public:
         }
         this->top = columns * -1;
         this->bottom = columns;
+        this->adjacentNumberPositionIncrements = {2*top + 2*left, 2*top + left, 2*top, 2*top + right, 
+            2*top + 2*right, top + 2*left, top + left, top, top + right, top + 2*right, 2*left, 
+            left, right, 2*right, bottom + 2*left, bottom + left, bottom, bottom + right, 
+            bottom + 2*right, 2*bottom + 2*left, 2*bottom + left, 2*bottom, 2*bottom + right, 
+            2*bottom + 2*right};
+        this->adjacentMinePositionIncrements = {top + left, top, top + right, left, right, 
+            bottom + left, bottom, bottom + right};
     }
     Field (int rows, int columns, vector<Cell> cells) {
         this->rows = rows;
@@ -94,12 +102,13 @@ public:
     }
 
     void mapPossibleMinesAndNumbers() {
-        cout << "In mapping" << endl;
+        //cout << "In mapping" << endl;
         int currentCellPosition = 0;
         const int LEFT_EDGE = 0;
         const int RIGHT_EDGE = columns - 1;
         for (unsigned long i = 0; i < cells.size(); ++i) {
             if (cells.at(currentCellPosition).isNumber() == true) {
+                //First outer ring. Looking for numbers and possible mines.
                 if (currentCellPosition + top + left >= 0 && cells.at(currentCellPosition).getColumnPosition() != LEFT_EDGE) {
                     if (cells.at(currentCellPosition + top + left).possibleMine() == true) {
                         cells.at(currentCellPosition).addAdjacentPossibleMinePosition(currentCellPosition + top + left);
@@ -166,6 +175,103 @@ public:
                         cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + bottom + right);
                     }
                 }
+
+                //Second outer ring. Looking only for numbers.
+                if (currentCellPosition + 2*top + 2*left >= 0 && cells.at(currentCellPosition).getColumnPosition() > LEFT_EDGE + 1) {
+                    if (cells.at(currentCellPosition + 2*top + 2*left).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + 2*top + 2*left);
+                    }
+                }
+
+                if (currentCellPosition + 2*top + left >= 0 && cells.at(currentCellPosition).getColumnPosition() != LEFT_EDGE) {
+                    if (cells.at(currentCellPosition + 2*top + left).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + 2*top + left);
+                    }
+                }
+
+                if (currentCellPosition + 2*top >= 0) {
+                    if (cells.at(currentCellPosition + 2*top).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + 2*top);
+                    }
+                }
+
+                if (currentCellPosition + 2*top + right >= 0 && cells.at(currentCellPosition).getColumnPosition() != RIGHT_EDGE) {
+                    if (cells.at(currentCellPosition + 2*top + right).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + 2*top + right);
+                    }
+                }
+
+                if (currentCellPosition + 2*top + 2*right >= 0 && cells.at(currentCellPosition).getColumnPosition() < RIGHT_EDGE - 1) {
+                    if (cells.at(currentCellPosition + 2*top + 2*right).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + 2*top + 2*right);
+                    }
+                }
+
+                if (currentCellPosition + top + 2*left >= 0 && cells.at(currentCellPosition).getColumnPosition() > LEFT_EDGE + 1) {
+                    if (cells.at(currentCellPosition + top + 2*left).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + top + 2*left);
+                    }
+                }
+
+                if (currentCellPosition + top + 2*right >= 0 && cells.at(currentCellPosition).getColumnPosition() < RIGHT_EDGE - 1) {
+                    if (cells.at(currentCellPosition + top + 2*right).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + top + 2*right);
+                    }
+                }
+
+                if (currentCellPosition + 2*left >= 0 && cells.at(currentCellPosition).getColumnPosition() > LEFT_EDGE + 1) {
+                    if (cells.at(currentCellPosition + 2*left).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + 2*left);
+                    }
+                }
+
+                if (currentCellPosition + 2*right < static_cast<int>(cells.size()) && cells.at(currentCellPosition).getColumnPosition() < RIGHT_EDGE - 1) {
+                    if (cells.at(currentCellPosition + 2*right).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + 2*right);
+                    }
+                }
+
+                if (currentCellPosition + bottom + 2*left < static_cast<int>(cells.size()) && cells.at(currentCellPosition).getColumnPosition() > LEFT_EDGE + 1) {
+                    if (cells.at(currentCellPosition + bottom + 2*left).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + bottom + 2*left);
+                    }
+                }
+
+                if (currentCellPosition + bottom + 2*right < static_cast<int>(cells.size()) && cells.at(currentCellPosition).getColumnPosition() < RIGHT_EDGE - 1) {
+                    if (cells.at(currentCellPosition + bottom + 2*right).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + bottom + 2*right);
+                    }
+                }
+
+                if (currentCellPosition + 2*bottom + 2*left < static_cast<int>(cells.size()) && cells.at(currentCellPosition).getColumnPosition() > LEFT_EDGE + 1) {
+                    if (cells.at(currentCellPosition + 2*bottom + 2*left).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + 2*bottom + 2*left);
+                    }
+                }
+
+                if (currentCellPosition + 2*bottom + left < static_cast<int>(cells.size()) && cells.at(currentCellPosition).getColumnPosition() > LEFT_EDGE) {
+                    if (cells.at(currentCellPosition + 2*bottom + left).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + 2*bottom + left);
+                    }
+                }
+
+                if (currentCellPosition + 2*bottom < static_cast<int>(cells.size())) {
+                    if (cells.at(currentCellPosition + 2*bottom).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + 2*bottom);
+                    }
+                }
+
+                if (currentCellPosition + 2*bottom + right < static_cast<int>(cells.size()) && cells.at(currentCellPosition).getColumnPosition() < RIGHT_EDGE) {
+                    if (cells.at(currentCellPosition + 2*bottom + right).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + 2*bottom + right);
+                    }
+                }
+
+                if (currentCellPosition + 2*bottom + 2*right < static_cast<int>(cells.size()) && cells.at(currentCellPosition).getColumnPosition() < RIGHT_EDGE - 1) {
+                    if (cells.at(currentCellPosition + 2*bottom + 2*right).isNumber() == true) {
+                        cells.at(currentCellPosition).addAdjacentNumberPosition(currentCellPosition + 2*bottom + 2*right);
+                    }
+                }
             }
             ++currentCellPosition;
         }
@@ -175,7 +281,6 @@ public:
         
         if (skipCheck == true || cellsVisited.find(position) == cellsVisited.end()) {
             cellsVisited.insert(position);
-            //cout << "In depth search at " << position << endl;
             //Cell has not been visited
             
             //Get cell adjacent number and mine positions
@@ -204,46 +309,46 @@ public:
 
         }
 
-        //cout << "Returning from " << position << endl;
         return;
     }
 
     Field evaluate() {
         Field newField(rows, columns, cells);
         /*
-            First, we need to map out the possible positions of mines for every cell.
-        This will help us to determine our SCCs because we will be able to see if number cells
-        share possible mine cells.
+            First, we need to map out our field. The mapping process will complete two things:
+                1)  The positions of neighbor cells around all number cells that could contain mines.
+                2)  The positions of neighbor cells around all number cells that are also number cells.
+                    Step 2 looks for neighbor cells that are numbers from the closest 2 rings
+                    that surround the current number cell.
         */
         newField.clearPossibleMines();
         newField.clearAdjacentNumberPositions();
         newField.mapPossibleMinesAndNumbers();
-        cout << "Mapping complete" << endl;
-        int cellCounter = 0;
-        for (int i = 0; i < newField.size(); ++i) {
-            cout << newField.copyAt(cellCounter).getRowPosition() << " " << newField.copyAt(cellCounter).getColumnPosition() << endl;
-            cout << "Cell " << cellCounter << " numbers:" << endl;
-            set<int> adjacentNumbers = newField.copyAt(cellCounter).getadjacentNumberPositions();
-            for (auto& adjacentNumber : adjacentNumbers) {
-                cout << adjacentNumber << ", ";
-            }
-            cout << endl << "Cell " << cellCounter << " mines:" << endl;
-            set<int> adjacentMines = newField.copyAt(cellCounter).getAdjacentPossibleMinePositions();
-            for (auto& adjacentMine : adjacentMines) {
-                cout << adjacentMine << ", ";
-            }
-            cout << endl;
+        //cout << "Mapping complete" << endl;
+        // int cellCounter = 0;
+        // for (int i = 0; i < newField.size(); ++i) {
+        //     cout << newField.copyAt(cellCounter).getRowPosition() << " " << newField.copyAt(cellCounter).getColumnPosition() << endl;
+        //     cout << "Cell " << cellCounter << " numbers:" << endl;
+        //     set<int> adjacentNumbers = newField.copyAt(cellCounter).getadjacentNumberPositions();
+        //     for (auto& adjacentNumber : adjacentNumbers) {
+        //         cout << adjacentNumber << ", ";
+        //     }
+        //     cout << endl << "Cell " << cellCounter << " mines:" << endl;
+        //     set<int> adjacentMines = newField.copyAt(cellCounter).getAdjacentPossibleMinePositions();
+        //     for (auto& adjacentMine : adjacentMines) {
+        //         cout << adjacentMine << ", ";
+        //     }
+        //     cout << endl;
 
-            ++cellCounter;
-        }
-
-        //return newField;
+        //     ++cellCounter;
+        // }
 
         /*
-            Second, we need to identify the Strongly Connected Components (SCCs). We will
-        perform a depth first search for all cells with a number value. An SCC is made up of 
-        cells that share neighbors that may contain a mine. Basically, this organizes the numbered cells
-        into groups where every member of the group can have an effect on all other members.
+                Second, we need to identify the Strongly Connected Components (SCCs) based on our map.
+            An SCC is a group of number cells that when evaluated individually can affect the way we
+            evaluate the other number cells in the group. In simple terms, an SCC for our purposes is
+            a chain of number cells where each number cell shares a neighbor that could contain a mine
+            with at least one other number cell in the chain.
         */
         set<int> cellsVisited;
         vector<set<int>> allSCCs;
