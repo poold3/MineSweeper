@@ -49,7 +49,8 @@ public:
     }
 
     bool possibleMine() {
-        if (value != ' ' && isdigit(value) == false) {
+        //if (value != ' ' && isdigit(value) == false) {
+        if (value == '*' || value == 'f') {
             return true;
         }
         else {
@@ -67,6 +68,13 @@ public:
 
     void toString() {
         cout << "[" << value << "]";
+    }
+
+    string returnString() {
+        string stringValue = "[";
+        stringValue += value;
+        stringValue += "]";
+        return stringValue;
     }
 
     void addAdjacentPossibleMinePosition(int position) {

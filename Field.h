@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <sstream>
 
 #include "Cell.h"
 
@@ -87,6 +88,18 @@ public:
             }
             cout << endl;
         }
+    }
+
+    string returnString() {
+        ostringstream out;
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < columns; ++j) {
+                out << cells.at((i * columns) + j).returnString();
+            }
+            out << endl;
+        }
+
+        return out.str();
     }
 
     void clearPossibleMines() {
@@ -312,6 +325,60 @@ public:
         return;
     }
 
+    static void evaluateSCC(Field &newField, set<int> &SCC) {
+        // cout << "SCC Evaluation" << endl;
+        // for (auto& position: SCC) {
+        //     cout << position << ", ";
+        // }
+        //cout << endl << endl;
+        int changes = 0;
+        int changeCounter = 1;
+        int counter = 0;
+        while (changes != changeCounter) {
+            ++counter;
+            changeCounter = changes;
+            for (auto& position : SCC) {
+                Cell currentCell = newField.at(position);
+                char value = currentCell.getValue();
+                int valueCopy = value - '0';
+                vector<int> unknownPositions;
+                set<int> possibleMinePositions = currentCell.getAdjacentPossibleMinePositions();
+                for (auto& position2 : possibleMinePositions) {
+                    if (newField.copyAt(position2).getValue() == 'f') {
+                        --valueCopy;
+                    }
+                    else if (newField.copyAt(position2).getValue() == '*') {
+                        unknownPositions.push_back(position2);
+                    }
+                }
+                if (valueCopy > 0 && valueCopy == static_cast<int>(unknownPositions.size())) {
+                    //Convert all '*' around cell to 'f'
+                    for (unsigned long i = 0; i < unknownPositions.size(); ++i) {
+                        newField.at(unknownPositions.at(i)).update('f');
+                        --valueCopy;
+                        unknownPositions.erase(unknownPositions.begin() + i);
+                        --i;
+                        ++changes;
+                    }
+                }
+                if (valueCopy == 0 && static_cast<int>(unknownPositions.size()) > 0) {
+                    //Convert all '*' around cell to 'c'
+                    for (unsigned long i = 0; i < unknownPositions.size(); ++i) {
+                        newField.at(unknownPositions.at(i)).update('c');
+                        ++changes;
+                    }
+                }
+            }
+            if (counter == 1000) {
+                break;
+            }
+        }
+        cout << "Returning after " << counter << " iterations." << endl;
+
+
+        return;
+    }
+
     Field evaluate() {
         Field newField(rows, columns, cells);
         /*
@@ -324,24 +391,24 @@ public:
         newField.clearPossibleMines();
         newField.clearAdjacentNumberPositions();
         newField.mapPossibleMinesAndNumbers();
-        //cout << "Mapping complete" << endl;
-        // int cellCounter = 0;
-        // for (int i = 0; i < newField.size(); ++i) {
-        //     cout << newField.copyAt(cellCounter).getRowPosition() << " " << newField.copyAt(cellCounter).getColumnPosition() << endl;
-        //     cout << "Cell " << cellCounter << " numbers:" << endl;
-        //     set<int> adjacentNumbers = newField.copyAt(cellCounter).getadjacentNumberPositions();
-        //     for (auto& adjacentNumber : adjacentNumbers) {
-        //         cout << adjacentNumber << ", ";
-        //     }
-        //     cout << endl << "Cell " << cellCounter << " mines:" << endl;
-        //     set<int> adjacentMines = newField.copyAt(cellCounter).getAdjacentPossibleMinePositions();
-        //     for (auto& adjacentMine : adjacentMines) {
-        //         cout << adjacentMine << ", ";
-        //     }
-        //     cout << endl;
+        cout << "Mapping complete" << endl;
+        int cellCounter = 0;
+        for (int i = 0; i < newField.size(); ++i) {
+            cout << newField.copyAt(cellCounter).getRowPosition() << " " << newField.copyAt(cellCounter).getColumnPosition() << endl;
+            cout << "Cell " << cellCounter << " numbers:" << endl;
+            set<int> adjacentNumbers = newField.copyAt(cellCounter).getadjacentNumberPositions();
+            for (auto& adjacentNumber : adjacentNumbers) {
+                cout << adjacentNumber << ", ";
+            }
+            cout << endl << "Cell " << cellCounter << " mines:" << endl;
+            set<int> adjacentMines = newField.copyAt(cellCounter).getAdjacentPossibleMinePositions();
+            for (auto& adjacentMine : adjacentMines) {
+                cout << adjacentMine << ", ";
+            }
+            cout << endl;
 
-        //     ++cellCounter;
-        // }
+            ++cellCounter;
+        }
 
         /*
                 Second, we need to identify the Strongly Connected Components (SCCs) based on our map.
@@ -356,7 +423,6 @@ public:
             if (cellsVisited.find(i) == cellsVisited.end()) {
                 //Cell has not been visited
                 cellsVisited.insert(i);
-                //cout << "Inserting " << i << endl;
                 set<int> SCC;
                 
                 if (newField.copyAt(i).isNumber() == true) {
@@ -375,6 +441,17 @@ public:
             }
             cout << endl << endl;
         }
+
+        /*
+            Third, we will go through each SCC. Within each SCC, we will run a fixed-point
+        algorithm that will continue to try and solve that SCC until there are no new changes
+        being made.
+        */
+
+        for (unsigned long i = 0; i < allSCCs.size(); ++i) {
+            evaluateSCC(newField, allSCCs.at(i));
+        }
+
 
         return newField;
     }

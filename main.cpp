@@ -103,5 +103,20 @@ int main(int argc, char* argv[]) {
     cout << endl;
     Field newField = field.evaluate();
 
+    cout << endl << endl << "Final Field." << endl;
+    newField.toString();
+
+    ofstream outfile;
+    outfile.open(inputFile);
+    if (outfile.is_open()) {
+        outfile << newField.returnString();
+    }
+    else {
+        cout << "Error! " << inputFile << " was unable to be opened." << endl << endl;
+        cout << "Exiting!" << endl;
+        return 0;
+    }
+    outfile.close();
+    cout << inputFile << " has been updated." << endl;
     return 0;
 }
