@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include <sstream>
+#include <stdlib.h>
 
 #include "Cell.h"
 
@@ -20,8 +21,6 @@ private:
     int right = 1;
     int top;
     int bottom;
-    vector<int> adjacentNumberPositionIncrements;
-    vector<int> adjacentMinePositionIncrements;
 
 public:
     Field (int rows, int columns, vector<char> values) {
@@ -35,13 +34,6 @@ public:
         }
         this->top = columns * -1;
         this->bottom = columns;
-        this->adjacentNumberPositionIncrements = {2*top + 2*left, 2*top + left, 2*top, 2*top + right, 
-            2*top + 2*right, top + 2*left, top + left, top, top + right, top + 2*right, 2*left, 
-            left, right, 2*right, bottom + 2*left, bottom + left, bottom, bottom + right, 
-            bottom + 2*right, 2*bottom + 2*left, 2*bottom + left, 2*bottom, 2*bottom + right, 
-            2*bottom + 2*right};
-        this->adjacentMinePositionIncrements = {top + left, top, top + right, left, right, 
-            bottom + left, bottom, bottom + right};
     }
     Field (int rows, int columns, vector<Cell> cells) {
         this->rows = rows;
@@ -50,15 +42,13 @@ public:
         this->top = columns * -1;
         this->bottom = columns;
     }
-    Field () {
-        this->rows = 0;
-        this->columns = 0;
-        this->top = columns * -1;
-        this->bottom = columns;
-    }
 
     int size() {
         return cells.size();
+    }
+
+    vector<Cell> getCells() {
+        return cells;
     }
 
     Cell& at(int rowPosition, int columnPosition) {
@@ -81,6 +71,20 @@ public:
         cells.at((rowPosition * columns) + columnPosition).update(value);
     }
 
+    bool solved(Field &keyField) {
+        //Returns true if the gameField matches the keyField
+        vector<Cell> keyCells = keyField.getCells();
+        bool solved = true;
+        for (unsigned long i = 0; i < keyCells.size(); ++i) {
+            if (keyCells.at(i).getValue() != cells.at(i).getValue()) {
+                solved = false;
+                break;
+            }
+        }
+
+        return solved;
+    }
+
     void toString() {
         for (int i = 0; i < rows; ++i) {
             for (int j = 0; j < columns; ++j) {
@@ -100,6 +104,250 @@ public:
         }
 
         return out.str();
+    }
+
+    void generateNumberCells() {
+        //This function only exists for key fields. This function generates number values around mines.
+        const int LEFT_EDGE = 0;
+        const int RIGHT_EDGE = columns - 1;
+        int currentCellPosition = 0;
+        for (auto& cell : cells) {
+            if (cell.getValue() == ' ') {
+                int numberValue = 0;
+
+                if (currentCellPosition + top + left >= 0 && cells.at(currentCellPosition).getColumnPosition() != LEFT_EDGE) {
+                    if (cells.at(currentCellPosition + top + left).getValue() == '*') {
+                        ++numberValue;
+                    }
+                }
+                if (currentCellPosition + top >= 0) {
+                    if (cells.at(currentCellPosition + top).getValue() == '*') {
+                        ++numberValue;
+                    }
+                }
+                if (currentCellPosition + top + right >= 0 && cells.at(currentCellPosition).getColumnPosition() != RIGHT_EDGE){
+                    if (cells.at(currentCellPosition + top + right).getValue() == '*') {
+                        ++numberValue;
+                    }
+                }
+                if (currentCellPosition + left >= 0  && cells.at(currentCellPosition).getColumnPosition() != LEFT_EDGE) {
+                    if (cells.at(currentCellPosition + left).getValue() == '*') {
+                        ++numberValue;
+                    }
+                }
+                if (currentCellPosition + right < static_cast<int>(cells.size()) && cells.at(currentCellPosition).getColumnPosition() != RIGHT_EDGE) {
+                    if (cells.at(currentCellPosition + right).getValue() == '*') {
+                        ++numberValue;
+                    }
+                }
+                if (currentCellPosition + bottom + left < static_cast<int>(cells.size()) && cells.at(currentCellPosition).getColumnPosition() != LEFT_EDGE) {
+                    if (cells.at(currentCellPosition + bottom + left).getValue() == '*') {
+                        ++numberValue;
+                    }
+                }
+                if (currentCellPosition + bottom < static_cast<int>(cells.size())) {
+                    if (cells.at(currentCellPosition + bottom).getValue() == '*') {
+                        ++numberValue;
+                    }
+                }
+                if (currentCellPosition + bottom + right < static_cast<int>(cells.size()) && cells.at(currentCellPosition).getColumnPosition() != RIGHT_EDGE) {
+                    if (cells.at(currentCellPosition + bottom + right).getValue() == '*') {
+                        ++numberValue;
+                    }
+                }
+                if (numberValue > 0) {
+                    char value = numberValue + '0';
+                    cell.update(value);
+                }
+            }
+            ++currentCellPosition;
+        }
+
+
+    }
+
+    static void mapEmptyPatchSize(vector<Cell> &cells, int position, int &size, set<int> &cellsVisited, int columns, bool skipCheck = false) {
+        const int LEFT_EDGE = 0;
+        const int RIGHT_EDGE = columns - 1;
+        int left = -1;
+        int right = 1;
+        int top = columns * -1;
+        int bottom = columns;
+        if (cellsVisited.find(position) == cellsVisited.end() || skipCheck == true) {
+            cellsVisited.insert(position);
+            ++size;
+            if (position + top >= 0) {
+                if (cells.at(position + top).getValue() == ' ') {
+                    mapEmptyPatchSize(cells, position + top, size, cellsVisited, columns);
+                }
+            }
+            if (position + left >= 0  && cells.at(position).getColumnPosition() != LEFT_EDGE) {
+                if (cells.at(position + left).getValue() == ' ') {
+                    mapEmptyPatchSize(cells, position + left, size, cellsVisited, columns);
+                }
+            }
+            if (position + right < static_cast<int>(cells.size()) && cells.at(position).getColumnPosition() != RIGHT_EDGE) {
+                if (cells.at(position + right).getValue() == ' ') {
+                    mapEmptyPatchSize(cells, position + right, size, cellsVisited, columns);
+                }
+            }
+            if (position + bottom < static_cast<int>(cells.size())) {
+                if (cells.at(position + bottom).getValue() == ' ') {
+                    mapEmptyPatchSize(cells, position + bottom, size, cellsVisited, columns);
+                }
+            }
+        }
+        return;
+    }
+
+    static void outlineEmptyPatch(vector<Cell> &cells, vector<Cell> keyCells, set<int> cellsVisited, int columns) {
+        const int LEFT_EDGE = 0;
+        const int RIGHT_EDGE = columns - 1;
+        int left = -1;
+        int right = 1;
+        int top = columns * -1;
+        int bottom = columns;
+
+        for (auto& position : cellsVisited) {
+            if (position + top + left >= 0 && keyCells.at(position).getColumnPosition() != LEFT_EDGE) {
+                if (keyCells.at(position + top + left).isNumber() == true) {
+                    cells.at(position + top + left).update(keyCells.at(position + top + left).getValue());
+                }
+            }
+            if (position + top >= 0) {
+                if (keyCells.at(position + top).isNumber() == true) {
+                    cells.at(position + top).update(keyCells.at(position + top).getValue());
+                }
+            }
+            if (position + top + right >= 0 && keyCells.at(position).getColumnPosition() != RIGHT_EDGE){
+                if (keyCells.at(position + top + right).isNumber() == true) {
+                    cells.at(position + top + right).update(keyCells.at(position + top + right).getValue());
+                }
+            }
+            if (position + left >= 0  && keyCells.at(position).getColumnPosition() != LEFT_EDGE) {
+                if (keyCells.at(position + left).isNumber() == true) {
+                    cells.at(position + left).update(keyCells.at(position + left).getValue());
+                }
+            }
+            if (position + right < static_cast<int>(keyCells.size()) && keyCells.at(position).getColumnPosition() != RIGHT_EDGE) {
+                if (keyCells.at(position + right).isNumber() == true) {
+                    cells.at(position + right).update(keyCells.at(position + right).getValue());
+                }
+            }
+            if (position + bottom + left < static_cast<int>(keyCells.size()) && keyCells.at(position).getColumnPosition() != LEFT_EDGE) {
+                if (keyCells.at(position + bottom + left).isNumber() == true) {
+                    cells.at(position + bottom + left).update(keyCells.at(position + bottom + left).getValue());
+                }
+            }
+            if (position + bottom < static_cast<int>(keyCells.size())) {
+                if (keyCells.at(position + bottom).isNumber() == true) {
+                    cells.at(position + bottom).update(keyCells.at(position + bottom).getValue());
+                }
+            }
+            if (position + bottom + right < static_cast<int>(keyCells.size()) && keyCells.at(position).getColumnPosition() != RIGHT_EDGE) {
+                if (keyCells.at(position + bottom + right).isNumber() == true) {
+                    cells.at(position + bottom + right).update(keyCells.at(position + bottom + right).getValue());
+                }
+            }
+        }
+
+        return;
+    }
+
+    Field generateGameField() {
+        //This function only exists for key fields. This function generates a playable field.
+        /*
+            First, we need to find a good/random starting location. I want the starting location to have
+        at least 10 empty cells.
+        */
+        bool found = false;
+        int startingPosition = 0;
+        while (found == false) {
+            
+            int position = rand() % 576;
+            
+            if (cells.at(position).getValue() == ' ') {
+                
+                /*We found an empty cell. Map out empty neighbor cells nearby to determine size of
+                empty patch.*/
+                int size = 0;
+                set<int> cellsVisited;
+                mapEmptyPatchSize(cells, position, size, cellsVisited, columns);
+                if (size >= 10) {
+                    startingPosition = position;
+                    found = true;
+                }
+            }
+        }
+        /*We found our starting position. Now create a new field with all unknown cells and one 
+        c value at starting position*/
+        vector<char> values;
+        for (int i = 0; i < 576; ++i) {
+            if (i == startingPosition) {
+                values.push_back('c');
+            }
+            else {
+                values.push_back('#');
+            }
+        }
+
+        Field gameField(32, 18, values);
+        return gameField;
+    }
+
+    void firstClick(Field &keyField) {
+        //Find the c cell
+        int cPosition = 0;
+        for (auto& cell : cells) {
+            if (cell.getValue() == 'c') {
+                cPosition = cell.getPosition();
+                break;
+            }
+        }
+
+        vector<Cell> keyCells = keyField.getCells();
+        int size = 0;
+        set<int> cellsVisited;
+        //Map the empty patch and update the gameField
+        mapEmptyPatchSize(keyCells, cPosition, size, cellsVisited, columns);
+        for (auto& position : cellsVisited) {
+            cells.at(position).update(' ');
+        }
+        
+        //Find all numbers surrounding the empty patch and update the gameField with those numbers.
+        outlineEmptyPatch(cells, keyCells, cellsVisited, columns);
+        
+
+        return;
+    }
+
+    void runClicks(Field &keyField, set<int> clickPositions) {
+        vector<Cell> keyCells = keyField.getCells();
+
+        for (auto& position : clickPositions) {
+            if (keyCells.at(position).isNumber() == true) {
+                cells.at(position).update(keyCells.at(position).getValue());
+            }
+            else if (keyCells.at(position).getValue() == ' ') {
+                int size = 0;
+                set<int> cellsVisited;
+                mapEmptyPatchSize(keyCells, position, size, cellsVisited, columns);
+                for (auto& position : cellsVisited) {
+                    cells.at(position).update(' ');
+                }
+                outlineEmptyPatch(cells, keyCells, cellsVisited, columns);
+
+            }
+            else if (keyCells.at(position).isMine() == true) {
+                string error = "KABOOM!";
+                throw std::invalid_argument(error);
+            }
+            else {
+                string error = "Something weird happened. Please retry.";
+                throw std::invalid_argument(error);
+            }
+        }
+        return;
     }
 
     void clearPossibleMines() {
@@ -325,7 +573,7 @@ public:
         return;
     }
 
-    static void evaluateSCC(Field &newField, set<int> &SCC) {
+    static void evaluateSCC(Field &newField, set<int> &SCC, set<int> &clickPositions) {
         // cout << "SCC Evaluation" << endl;
         // for (auto& position: SCC) {
         //     cout << position << ", ";
@@ -344,17 +592,17 @@ public:
                 vector<int> unknownPositions;
                 set<int> possibleMinePositions = currentCell.getAdjacentPossibleMinePositions();
                 for (auto& position2 : possibleMinePositions) {
-                    if (newField.copyAt(position2).getValue() == 'f') {
+                    if (newField.copyAt(position2).getValue() == '*') {
                         --valueCopy;
                     }
-                    else if (newField.copyAt(position2).getValue() == '*') {
+                    else if (newField.copyAt(position2).getValue() == '#') {
                         unknownPositions.push_back(position2);
                     }
                 }
                 if (valueCopy > 0 && valueCopy == static_cast<int>(unknownPositions.size())) {
-                    //Convert all '*' around cell to 'f'
+                    //Convert all '#' around cell to '*'
                     for (unsigned long i = 0; i < unknownPositions.size(); ++i) {
-                        newField.at(unknownPositions.at(i)).update('f');
+                        newField.at(unknownPositions.at(i)).update('*');
                         --valueCopy;
                         unknownPositions.erase(unknownPositions.begin() + i);
                         --i;
@@ -362,16 +610,17 @@ public:
                     }
                 }
                 if (valueCopy == 0 && static_cast<int>(unknownPositions.size()) > 0) {
-                    //Convert all '*' around cell to 'c'
+                    //Convert all '#' around cell to 'c'
                     for (unsigned long i = 0; i < unknownPositions.size(); ++i) {
                         newField.at(unknownPositions.at(i)).update('c');
+                        clickPositions.insert(unknownPositions.at(i));
                         ++changes;
                     }
                 }
             }
-            if (counter == 1000) {
-                break;
-            }
+            // if (counter == 1000) {
+            //     break;
+            // }
         }
         cout << "Returning after " << counter << " iterations." << endl;
 
@@ -379,7 +628,7 @@ public:
         return;
     }
 
-    Field evaluate() {
+    Field evaluate(set<int> &clickPositions) {
         Field newField(rows, columns, cells);
         /*
             First, we need to map out our field. The mapping process will complete two things:
@@ -391,24 +640,24 @@ public:
         newField.clearPossibleMines();
         newField.clearAdjacentNumberPositions();
         newField.mapPossibleMinesAndNumbers();
-        cout << "Mapping complete" << endl;
-        int cellCounter = 0;
-        for (int i = 0; i < newField.size(); ++i) {
-            cout << newField.copyAt(cellCounter).getRowPosition() << " " << newField.copyAt(cellCounter).getColumnPosition() << endl;
-            cout << "Cell " << cellCounter << " numbers:" << endl;
-            set<int> adjacentNumbers = newField.copyAt(cellCounter).getadjacentNumberPositions();
-            for (auto& adjacentNumber : adjacentNumbers) {
-                cout << adjacentNumber << ", ";
-            }
-            cout << endl << "Cell " << cellCounter << " mines:" << endl;
-            set<int> adjacentMines = newField.copyAt(cellCounter).getAdjacentPossibleMinePositions();
-            for (auto& adjacentMine : adjacentMines) {
-                cout << adjacentMine << ", ";
-            }
-            cout << endl;
+        //cout << "Mapping complete" << endl;
+        // int cellCounter = 0;
+        // for (int i = 0; i < newField.size(); ++i) {
+        //     cout << newField.copyAt(cellCounter).getRowPosition() << " " << newField.copyAt(cellCounter).getColumnPosition() << endl;
+        //     cout << "Cell " << cellCounter << " numbers:" << endl;
+        //     set<int> adjacentNumbers = newField.copyAt(cellCounter).getadjacentNumberPositions();
+        //     for (auto& adjacentNumber : adjacentNumbers) {
+        //         cout << adjacentNumber << ", ";
+        //     }
+        //     cout << endl << "Cell " << cellCounter << " mines:" << endl;
+        //     set<int> adjacentMines = newField.copyAt(cellCounter).getAdjacentPossibleMinePositions();
+        //     for (auto& adjacentMine : adjacentMines) {
+        //         cout << adjacentMine << ", ";
+        //     }
+        //     cout << endl;
 
-            ++cellCounter;
-        }
+        //     ++cellCounter;
+        // }
 
         /*
                 Second, we need to identify the Strongly Connected Components (SCCs) based on our map.
@@ -449,7 +698,7 @@ public:
         */
 
         for (unsigned long i = 0; i < allSCCs.size(); ++i) {
-            evaluateSCC(newField, allSCCs.at(i));
+            evaluateSCC(newField, allSCCs.at(i), clickPositions);
         }
 
 

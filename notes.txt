@@ -1,4 +1,4 @@
-[*] - Cell content unknown/Cell may contain mine
+[#] - Cell content unknown/Cell may contain mine
 [ ] - Cell is verified to be empty
-[f] - Cell is flagged
+[*] - Cell is flagged/Cell contains a mine
 [x] - Cell is surrounded by x number of mines. Domain:{1-8}

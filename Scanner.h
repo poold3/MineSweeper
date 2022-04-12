@@ -47,14 +47,14 @@ public:
                     else if (inputLine.at(0) == ']') {
                         tokens.push(']');
                     }
-                    else if (inputLine.at(0) == 'f') {
-                        tokens.push('f');
+                    else if (inputLine.at(0) == '*') {
+                        tokens.push('*');
                     }
                     else if (inputLine.at(0) == ' ') {
                         tokens.push(' ');
                     }
-                    else if (inputLine.at(0) == '*') {
-                        tokens.push('*');
+                    else if (inputLine.at(0) == '#') {
+                        tokens.push('#');
                     }
                     else if (isdigit(inputLine.at(0)) && inputLine.at(0)-48 > 0 && inputLine.at(0)-48 < 9) {
                         tokens.push(inputLine.at(0));

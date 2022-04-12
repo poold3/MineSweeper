@@ -24,11 +24,8 @@ public:
         this->columnPosition = columnPosition;
     }
 
-    Cell () {
-        this->value = ' ';
-        this->position = 0;
-        this->rowPosition = 0;
-        this->columnPosition = 0;
+    int getPosition() {
+        return position;
     }
 
     int getRowPosition() {
@@ -50,7 +47,17 @@ public:
 
     bool possibleMine() {
         //if (value != ' ' && isdigit(value) == false) {
-        if (value == '*' || value == 'f') {
+        if (value == '#' || value == '*') {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    bool isMine() {
+        //This method is for keyCells only!
+        if (value == '*') {
             return true;
         }
         else {

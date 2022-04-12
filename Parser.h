@@ -55,13 +55,13 @@ public:
                 fieldValues.push_back(tokens.front());
                 match(' ');
             }
-            else if (tokens.front() == 'f') {
-                fieldValues.push_back(tokens.front());
-                match('f');
-            }
             else if (tokens.front() == '*') {
                 fieldValues.push_back(tokens.front());
                 match('*');
+            }
+            else if (tokens.front() == '#') {
+                fieldValues.push_back(tokens.front());
+                match('#');
             }
             else if (isdigit(tokens.front())) {
                 fieldValues.push_back(tokens.front());
