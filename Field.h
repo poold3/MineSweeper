@@ -254,7 +254,7 @@ public:
         return;
     }
 
-    Field generateGameField() {
+    Field generateGameField(const int NUM_ROWS, const int NUM_COLUMNS) {
         //This function only exists for key fields. This function generates a playable field.
         /*
             First, we need to find a good/random starting location. I want the starting location to have
@@ -264,7 +264,7 @@ public:
         int startingPosition = 0;
         while (found == false) {
             
-            int position = rand() % 576;
+            int position = rand() % (NUM_ROWS * NUM_COLUMNS);
             
             if (cells.at(position).getValue() == ' ') {
                 
@@ -282,7 +282,7 @@ public:
         /*We found our starting position. Now create a new field with all unknown cells and one 
         c value at starting position*/
         vector<char> values;
-        for (int i = 0; i < 576; ++i) {
+        for (int i = 0; i < (NUM_ROWS * NUM_COLUMNS); ++i) {
             if (i == startingPosition) {
                 values.push_back('c');
             }
@@ -291,7 +291,7 @@ public:
             }
         }
 
-        Field gameField(32, 18, values);
+        Field gameField(NUM_ROWS, NUM_COLUMNS, values);
         return gameField;
     }
 
@@ -563,22 +563,12 @@ public:
 
                     }
                 }
-            
-            
             }
-
-
         }
-
         return;
     }
 
     static void evaluateSCC(Field &newField, set<int> &SCC, set<int> &clickPositions) {
-        // cout << "SCC Evaluation" << endl;
-        // for (auto& position: SCC) {
-        //     cout << position << ", ";
-        // }
-        //cout << endl << endl;
         int changes = 0;
         int changeCounter = 1;
         int counter = 0;
@@ -618,9 +608,6 @@ public:
                     }
                 }
             }
-            // if (counter == 1000) {
-            //     break;
-            // }
         }
         cout << "Returning after " << counter << " iterations." << endl;
 
@@ -632,7 +619,7 @@ public:
         Field newField(rows, columns, cells);
         /*
             First, we need to map out our field. The mapping process will complete two things:
-                1)  The positions of neighbor cells around all number cells that could contain mines.
+                1)  The positions of neighbor cells around all number cells that could contain mines (# or *).
                 2)  The positions of neighbor cells around all number cells that are also number cells.
                     Step 2 looks for neighbor cells that are numbers from the closest 2 rings
                     that surround the current number cell.
