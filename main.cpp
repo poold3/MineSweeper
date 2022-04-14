@@ -11,7 +11,7 @@
 
 using namespace std;
 
-const int NUM_MINES = 300;
+const int NUM_MINES = 100;
 const int NUM_ROWS = 32;
 const int NUM_COLUMNS = 18;
 
@@ -172,10 +172,13 @@ int main(int argc, char* argv[]) {
         cout << endl;
         //Generate Number values around each mine in the field.
         keyField.generateNumberCells();
-        return 0;
+        keyField.toString();
+        cout << endl;
+        
+        //return 0;
         //Generate our gameField with a 'c' on our starting position
         Field gameField = keyField.generateGameField(NUM_ROWS, NUM_COLUMNS);
-        
+        cout << "Test" << endl;
         cout << "The Field:" << endl << endl;
         gameField.toString();
         cout << endl << "The c is where the solver will \"click\" first. Press enter to progress through the solver." << endl;
