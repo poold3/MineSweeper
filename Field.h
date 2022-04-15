@@ -266,10 +266,13 @@ public:
         /*
             First, we need to find a good/random starting location. I want the starting location to have
         at least 10 empty cells.
+
+            I am using a set to keep track of positions that we can still search. Erasing from a
+        vector at beginning to middle positions is not very efficient.
         */
-        vector<int> positions;
+        set<int> positions;
         for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; ++i) {
-            positions.push_back(i);
+            positions.insert(i);
         }
         bool found = false;
         int startingPosition = 0;
@@ -278,20 +281,29 @@ public:
                 string error = "No empty patch big enough to begin.";
                 throw std::invalid_argument(error);
             }
-            int position = rand() % positions.size();
-            if (cells.at(positions.at(position)).getValue() == ' ') {
+            int position;
+            int iterations = rand() % positions.size();
+            int counter = 0;
+            for (auto& pos : positions) {
+                if (counter == iterations) {
+                    position = pos;
+                    break;
+                }
+                ++counter;
+            }
+            if (cells.at(position).getValue() == ' ') {
                 
                 /*We found an empty cell. Map out empty neighbor cells nearby to determine size of
                 empty patch.*/
                 int size = 0;
                 set<int> cellsVisited;
-                mapEmptyPatchSize(cells, positions.at(position), size, cellsVisited, columns);
+                mapEmptyPatchSize(cells, position, size, cellsVisited, columns);
                 if (size >= 10) {
-                    startingPosition = positions.at(position);
+                    startingPosition = position;
                     found = true;
                 }
             }
-            positions.erase(positions.begin() + position);
+            positions.erase(position);
 
         }
         /*We found our starting position. Now create a new field with all unknown cells and one 
@@ -331,7 +343,6 @@ public:
         
         //Find all numbers surrounding the empty patch and update the gameField with those numbers.
         outlineEmptyPatch(cells, keyCells, cellsVisited, columns);
-        
 
         return;
     }

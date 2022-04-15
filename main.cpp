@@ -279,7 +279,7 @@ set<int> createMinePositions() {
             found = true;
         }
 
-    }    
+    }
     return minePositions;
 }
 
@@ -302,10 +302,6 @@ int main(int argc, char* argv[]) {
         cout << endl;
         //Generate Number values around each mine in the field.
         keyField.generateNumberCells();
-        keyField.toString();
-        cout << endl;
-        
-        //return 0;
         //Generate our gameField with a 'c' on our starting position
         Field gameField;
         try {
@@ -316,7 +312,6 @@ int main(int argc, char* argv[]) {
             return 0;
         }
         
-        cout << "Test" << endl;
         cout << "The Field:" << endl << endl;
         gameField.toString();
         cout << endl << "The c is where the solver will \"click\" first. Press enter to progress through the solver." << endl;
