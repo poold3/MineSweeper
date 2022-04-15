@@ -11,7 +11,7 @@
 
 using namespace std;
 
-const int NUM_MINES = 100;
+const int NUM_MINES = 300;
 const int NUM_ROWS = 32;
 const int NUM_COLUMNS = 18;
 
