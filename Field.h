@@ -43,6 +43,13 @@ public:
         this->bottom = columns;
     }
 
+    Field() {
+        this->rows = 0;
+        this->columns = 0;
+        this->top = 0;
+        this->bottom = 0;
+    }
+
     int size() {
         return cells.size();
     }
@@ -260,24 +267,32 @@ public:
             First, we need to find a good/random starting location. I want the starting location to have
         at least 10 empty cells.
         */
+        vector<int> positions;
+        for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; ++i) {
+            positions.push_back(i);
+        }
         bool found = false;
         int startingPosition = 0;
         while (found == false) {
-            
-            int position = rand() % (NUM_ROWS * NUM_COLUMNS);
-            
-            if (cells.at(position).getValue() == ' ') {
+            if (positions.size() == 0) {
+                string error = "No empty patch big enough to begin.";
+                throw std::invalid_argument(error);
+            }
+            int position = rand() % positions.size();
+            if (cells.at(positions.at(position)).getValue() == ' ') {
                 
                 /*We found an empty cell. Map out empty neighbor cells nearby to determine size of
                 empty patch.*/
                 int size = 0;
                 set<int> cellsVisited;
-                mapEmptyPatchSize(cells, position, size, cellsVisited, columns);
+                mapEmptyPatchSize(cells, positions.at(position), size, cellsVisited, columns);
                 if (size >= 10) {
-                    startingPosition = position;
+                    startingPosition = positions.at(position);
                     found = true;
                 }
             }
+            positions.erase(positions.begin() + position);
+
         }
         /*We found our starting position. Now create a new field with all unknown cells and one 
         c value at starting position*/

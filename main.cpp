@@ -15,6 +15,63 @@ const int NUM_MINES = 100;
 const int NUM_ROWS = 32;
 const int NUM_COLUMNS = 18;
 
+void findEmptyCells(set<int> &minePositions, set<int> &cellsVisited, int position) {
+    if (cellsVisited.find(position) == cellsVisited.end()) {
+        const int LEFT_EDGE = 0;
+        const int RIGHT_EDGE = NUM_COLUMNS - 1;
+        int left = -1;
+        int right = 1;
+        int top = NUM_COLUMNS * -1;
+        int bottom = NUM_COLUMNS;
+        int columnPosition = position % NUM_COLUMNS;
+        cellsVisited.insert(position);
+
+        if (position + top + left >= 0 && columnPosition != LEFT_EDGE) {
+            if (minePositions.find(position + top + left) == minePositions.end()) {
+                findEmptyCells(minePositions, cellsVisited, position + top + left);
+            }
+        }
+        if (position + top >= 0) {
+            if (minePositions.find(position + top) == minePositions.end()) {
+                findEmptyCells(minePositions, cellsVisited, position + top);
+            }
+        }
+        if (position + top + right >= 0 && columnPosition != RIGHT_EDGE) {
+            if (minePositions.find(position + top + right) == minePositions.end()) {
+                findEmptyCells(minePositions, cellsVisited, position + top + right);
+            }
+        }
+        if (position + left >= 0  && columnPosition != LEFT_EDGE) {
+            if (minePositions.find(position + left) == minePositions.end()) {
+                findEmptyCells(minePositions, cellsVisited, position + left);
+            }
+        }
+        if (position + right < (NUM_ROWS * NUM_COLUMNS) && columnPosition != RIGHT_EDGE) {
+            if (minePositions.find(position + right) == minePositions.end()) {
+                findEmptyCells(minePositions, cellsVisited, position + right);
+            }
+        }
+        if (position + bottom + left < (NUM_ROWS * NUM_COLUMNS) && columnPosition != LEFT_EDGE) {
+            if (minePositions.find(position + bottom + left) == minePositions.end()) {
+                findEmptyCells(minePositions, cellsVisited, position + bottom + left);
+            }
+        }
+        if (position + bottom < (NUM_ROWS * NUM_COLUMNS)) {
+            if (minePositions.find(position + bottom) == minePositions.end()) {
+                findEmptyCells(minePositions, cellsVisited, position + bottom);
+            }
+        }
+        if (position + bottom + right < (NUM_ROWS * NUM_COLUMNS) && columnPosition != RIGHT_EDGE) {
+            if (minePositions.find(position + bottom + right) == minePositions.end()) {
+                findEmptyCells(minePositions, cellsVisited, position + bottom + right);
+            }
+        }
+
+    }
+
+    return;
+}
+
 int findOpenSpaces(set<int> &minePositions, int position) {
     const int LEFT_EDGE = 0;
     const int RIGHT_EDGE = NUM_COLUMNS - 1;
@@ -82,7 +139,8 @@ int findOpenSpaces(set<int> &minePositions, int position) {
 set<int> createMinePositions() {
     /*
     This function will randomly generate positions for mines in our keyField.
-    The only stipulation is that no cell can be completely surrounded by other mines.
+    The only stipulation is that no empty cells can be separated from other empty cells.
+    This would result in an unsolvable field.
     */
     const int LEFT_EDGE = 0;
     const int RIGHT_EDGE = NUM_COLUMNS - 1;
@@ -90,66 +148,138 @@ set<int> createMinePositions() {
     int right = 1;
     int top = NUM_COLUMNS * -1;
     int bottom = NUM_COLUMNS;
-    
 
+    bool found = false;
     set<int> minePositions;
-    while (minePositions.size() < NUM_MINES) {
-        int position = rand() % (NUM_ROWS * NUM_COLUMNS);
-        if (minePositions.find(position) == minePositions.end()) {
-            int openSpaces = findOpenSpaces(minePositions, position);
-            if (openSpaces >= 1) {
-                int columnPosition = position % NUM_COLUMNS;
-                bool addMine = true;
-                //There are openspaces around this position. But if we add a mine here, will it surround another cell?
-                if (position + top + left >= 0 && columnPosition != LEFT_EDGE) {
-                    if (findOpenSpaces(minePositions, position + top + left) <= 1) {
-                        addMine = false;
-                    }
-                }
-                if (position + top >= 0) {
-                    if (findOpenSpaces(minePositions, position + top) <= 1) {
-                        addMine = false;
-                    }
-                }
-                if (position + top + right >= 0 && columnPosition != RIGHT_EDGE) {
-                    if (findOpenSpaces(minePositions, position + top + right) <= 1) {
-                        addMine = false;
-                    }
-                }
-                if (position + left >= 0  && columnPosition != LEFT_EDGE) {
-                    if (findOpenSpaces(minePositions, position + left) <= 1) {
-                        addMine = false;
-                    }
-                }
-                if (position + right < (NUM_ROWS * NUM_COLUMNS) && columnPosition != RIGHT_EDGE) {
-                    if (findOpenSpaces(minePositions, position + right) <= 1) {
-                        addMine = false;
-                    }
-                }
-                if (position + bottom + left < (NUM_ROWS * NUM_COLUMNS) && columnPosition != LEFT_EDGE) {
-                    if (findOpenSpaces(minePositions, position + bottom + left) <= 1) {
-                        addMine = false;
-                    }
-                }
-                if (position + bottom < (NUM_ROWS * NUM_COLUMNS)) {
-                    if (findOpenSpaces(minePositions, position + bottom) <= 1) {
-                        addMine = false;
-                    }
-                }
-                if (position + bottom + right < (NUM_ROWS * NUM_COLUMNS) && columnPosition != RIGHT_EDGE) {
-                    if (findOpenSpaces(minePositions, position + bottom + right) <= 1) {
-                        addMine = false;
-                    }
-                }
+    while (found == false) {
+        minePositions.clear();
+        /* Here we will generate mine positions. These positions will not cause the selected position
+        or any of the neighbor positions to be completely surrounded by mines. Basically, we are 
+        preventing the generation of something like this:
 
-                if (addMine == true) {
-                    minePositions.insert(position);
-                }
+        [*][*][*]
+        [*][*][*]
+        [*][*][*]
 
+        [*][*][*]
+        [*][ ][*]
+        [*][*][*]
+
+        or something like this in a corner.
+
+        [*][*]
+        [*][*]
+
+        [ ][*]
+        [*][*]
+
+        */
+        while (minePositions.size() < NUM_MINES) {
+            int position = rand() % (NUM_ROWS * NUM_COLUMNS);
+            if (minePositions.find(position) == minePositions.end()) {
+                int openSpaces = findOpenSpaces(minePositions, position);
+                if (openSpaces >= 1) {
+                    int columnPosition = position % NUM_COLUMNS;
+                    bool addMine = true;
+                    //There are openspaces around this position. But if we add a mine here, will it surround another cell?
+                    if (position + top + left >= 0 && columnPosition != LEFT_EDGE) {
+                        if (findOpenSpaces(minePositions, position + top + left) <= 1) {
+                            addMine = false;
+                        }
+                    }
+                    if (position + top >= 0) {
+                        if (findOpenSpaces(minePositions, position + top) <= 1) {
+                            addMine = false;
+                        }
+                    }
+                    if (position + top + right >= 0 && columnPosition != RIGHT_EDGE) {
+                        if (findOpenSpaces(minePositions, position + top + right) <= 1) {
+                            addMine = false;
+                        }
+                    }
+                    if (position + left >= 0  && columnPosition != LEFT_EDGE) {
+                        if (findOpenSpaces(minePositions, position + left) <= 1) {
+                            addMine = false;
+                        }
+                    }
+                    if (position + right < (NUM_ROWS * NUM_COLUMNS) && columnPosition != RIGHT_EDGE) {
+                        if (findOpenSpaces(minePositions, position + right) <= 1) {
+                            addMine = false;
+                        }
+                    }
+                    if (position + bottom + left < (NUM_ROWS * NUM_COLUMNS) && columnPosition != LEFT_EDGE) {
+                        if (findOpenSpaces(minePositions, position + bottom + left) <= 1) {
+                            addMine = false;
+                        }
+                    }
+                    if (position + bottom < (NUM_ROWS * NUM_COLUMNS)) {
+                        if (findOpenSpaces(minePositions, position + bottom) <= 1) {
+                            addMine = false;
+                        }
+                    }
+                    if (position + bottom + right < (NUM_ROWS * NUM_COLUMNS) && columnPosition != RIGHT_EDGE) {
+                        if (findOpenSpaces(minePositions, position + bottom + right) <= 1) {
+                            addMine = false;
+                        }
+                    }
+
+                    if (addMine == true) {
+                        minePositions.insert(position);
+                    }
+
+                }
             }
         }
-    }
 
+        /* Before we can submit these positions, we need to ensure that there are no groups of
+        empty cells that are cut off from the other empty cells by a chain of mines. This would 
+        result in an unsolvable field. We are preventing something like this:
+        
+        [ ][*][*][*][*][ ]
+        [*][*][ ][ ][*][*]
+        [ ][*][*][*][*][ ]
+        [ ][ ][*][ ][ ][*]
+        
+        While no cell is completely surrounded by mines, the 2 empty cells in the middle will be 
+        unsolvable because no number cell outside the mines will give any information on the middle
+        cells.
+
+        We will only run this check once per loop because of the unlikelyhood of generating a structure
+        like this on a normal minefield of only 100 mines. If you were to generate a field with 200 or 
+        300 mines, this method will not be the most efficient.
+
+        An easy way to check that no structures like this occur is by traveling through all empty cells
+        through their connections to each other. If we iterate through all the cell positions, each 
+        position should either be in the minePositions or in the cellsVisited. If a position is not 
+        in either of those, we know that there exists a structure like above where empty cells were 
+        not accessible to other empty cells on the field. A playable field has all empty cells being
+        connected either horizontally, vertically, or diagonally.
+        
+        */
+        set<int> cellsVisited;
+        int position;
+        //Find an empty cell from which to begin mapping.
+        for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; ++i) {
+            if (minePositions.find(i) == minePositions.end()) {
+                position = i;
+                break;
+            }
+        }
+        //Find all empty cells connected to this one.
+        findEmptyCells(minePositions, cellsVisited, position);
+        bool allCellsPresent = true;
+        //Determine if all cells are present
+        for (int i = 0; i < NUM_ROWS * NUM_COLUMNS; ++i) {
+            if (cellsVisited.find(i) == cellsVisited.end() && minePositions.find(i) == minePositions.end()) {
+                allCellsPresent = false;
+                break;
+            }
+        }
+        if (allCellsPresent == true) {
+            found = true;
+        }
+
+    }    
     return minePositions;
 }
 
@@ -177,7 +307,15 @@ int main(int argc, char* argv[]) {
         
         //return 0;
         //Generate our gameField with a 'c' on our starting position
-        Field gameField = keyField.generateGameField(NUM_ROWS, NUM_COLUMNS);
+        Field gameField;
+        try {
+            gameField = keyField.generateGameField(NUM_ROWS, NUM_COLUMNS);
+        }
+        catch (exception& e) {
+            cout << endl << e.what() << endl;
+            return 0;
+        }
+        
         cout << "Test" << endl;
         cout << "The Field:" << endl << endl;
         gameField.toString();
