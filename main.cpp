@@ -11,7 +11,7 @@
 
 using namespace std;
 
-const int NUM_MINES = 300;
+const int NUM_MINES = 100;
 const int NUM_ROWS = 32;
 const int NUM_COLUMNS = 18;
 
@@ -322,7 +322,7 @@ int main(int argc, char* argv[]) {
         bool solved = false;
         bool skip = false;
         while (solved == false) {
-
+            cout << endl;
             gameField.toString();
             if (skip == false) {
                 cout << endl << "Press Enter . . ." << endl << endl;
@@ -348,8 +348,23 @@ int main(int argc, char* argv[]) {
                     solved = true;
                 }
                 else {
-                    cout << "That's a tough MineField! We couldn't crack it!" << endl << endl;
-                    break;
+                    cout << "Trying Deductions" << endl;
+                    getline(cin, answer);
+                    set<int> newClickPositions;
+                    gameField = gameField.deduction(newClickPositions);
+                    if (newClickPositions.size() == 0) {
+                        break;
+                    }
+                    else {
+                        cout << "DEDUCTION!" << endl;
+                        try {
+                            gameField.runClicks(keyField, newClickPositions);
+                        }
+                        catch(exception& e) {
+                            cout << endl << e.what() << endl << endl;
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -357,6 +372,10 @@ int main(int argc, char* argv[]) {
         if (solved == true) {
             gameField.toString();
             cout << endl << "Solved!" << endl << endl;
+        }
+        else {
+            gameField.toString();
+            cout << endl << "That's a tough MineField! We couldn't crack it! At this point, the solution is only knowable if you were to guess." << endl << endl;
         }
     }
 

@@ -594,7 +594,7 @@ public:
         return;
     }
 
-    static void evaluateSCC(Field &newField, set<int> &SCC, set<int> &clickPositions) {
+    static bool evaluateSCC(Field &newField, set<int> &SCC, set<int> &clickPositions) {
         int changes = 0;
         int changeCounter = 1;
         int counter = 0;
@@ -633,12 +633,18 @@ public:
                         ++changes;
                     }
                 }
+                if (valueCopy < 0) {
+                    return false;
+                }
+                if (valueCopy > static_cast<int>(unknownPositions.size())) {
+                    return false;
+                }
             }
         }
-        cout << "Returning after " << counter << " iterations." << endl;
+        //cout << "Returning after " << counter << " iterations." << endl;
 
 
-        return;
+        return true;
     }
 
     Field evaluate(set<int> &clickPositions) {
@@ -653,24 +659,6 @@ public:
         newField.clearPossibleMines();
         newField.clearAdjacentNumberPositions();
         newField.mapPossibleMinesAndNumbers();
-        //cout << "Mapping complete" << endl;
-        // int cellCounter = 0;
-        // for (int i = 0; i < newField.size(); ++i) {
-        //     cout << newField.copyAt(cellCounter).getRowPosition() << " " << newField.copyAt(cellCounter).getColumnPosition() << endl;
-        //     cout << "Cell " << cellCounter << " numbers:" << endl;
-        //     set<int> adjacentNumbers = newField.copyAt(cellCounter).getadjacentNumberPositions();
-        //     for (auto& adjacentNumber : adjacentNumbers) {
-        //         cout << adjacentNumber << ", ";
-        //     }
-        //     cout << endl << "Cell " << cellCounter << " mines:" << endl;
-        //     set<int> adjacentMines = newField.copyAt(cellCounter).getAdjacentPossibleMinePositions();
-        //     for (auto& adjacentMine : adjacentMines) {
-        //         cout << adjacentMine << ", ";
-        //     }
-        //     cout << endl;
-
-        //     ++cellCounter;
-        // }
 
         /*
                 Second, we need to identify the Strongly Connected Components (SCCs) based on our map.
@@ -695,25 +683,159 @@ public:
             }
         }
 
-        cout << "Total number of SCCs: " << allSCCs.size() << endl;
-        for (unsigned long i = 0; i < allSCCs.size(); ++i) {
-            cout << "SCC " << i << ":" << endl;
-            for (auto& position: allSCCs.at(i)) {
-                cout << position << ", ";
-            }
-            cout << endl << endl;
-        }
+        // cout << "Total number of SCCs: " << allSCCs.size() << endl;
+        // for (unsigned long i = 0; i < allSCCs.size(); ++i) {
+        //     cout << "SCC " << i << ":" << endl;
+        //     for (auto& position: allSCCs.at(i)) {
+        //         cout << position << ", ";
+        //     }
+        //     cout << endl << endl;
+        // }
 
         /*
             Third, we will go through each SCC. Within each SCC, we will run a fixed-point
         algorithm that will continue to try and solve that SCC until there are no new changes
         being made.
         */
-
+        
         for (unsigned long i = 0; i < allSCCs.size(); ++i) {
             evaluateSCC(newField, allSCCs.at(i), clickPositions);
         }
 
+
+        return newField;
+    }
+
+    static bool advanceIterators(vector<int> &iterators, int numberOfPositions) {
+        //Purpose of this function is to advance the iterators to the next possible combination
+        bool finished = true;
+        int counter = 1;
+        
+        for (int i = static_cast<int>(iterators.size()) - 1; i >= 0; --i) {
+            if (iterators.at(i) != numberOfPositions - counter) {
+                
+                finished = false;
+                break;
+            }
+            ++counter;
+        }
+
+        if (finished == true) {
+            return true;
+        }
+        
+        //We are not done. Update iterators to the next positions
+        if (iterators.at(iterators.size() - 1) != numberOfPositions - 1) {
+            ++iterators.at(iterators.size() - 1);
+            return false;
+        }
+
+        counter = 2;
+        for (unsigned long i = iterators.size() - 2; i >= 0; --i) {
+            if (iterators.at(i) != numberOfPositions - counter) {
+                ++iterators.at(i);
+                for (unsigned long j = i + 1; j < iterators.size(); ++j) {
+                    iterators.at(j) =  iterators.at(j - 1) + 1;
+                }
+                return false;
+            }
+            ++counter;
+        }
+        return false;
+    }
+
+    static void deduceSCC(Field &newField, set<int> &SCC) {
+        for (auto& position : SCC) {
+            Cell currentCell = newField.at(position);
+            char value = currentCell.getValue();
+            int iValue = value - '0';
+            int valueCopy = iValue;
+            vector<int> unknownPositions;
+            set<int> possibleMinePositions = currentCell.getAdjacentPossibleMinePositions();
+            for (auto& position2 : possibleMinePositions) {
+                if (newField.copyAt(position2).getValue() == '*') {
+                    --valueCopy;
+                }
+                else if (newField.copyAt(position2).getValue() == '#') {
+                    unknownPositions.push_back(position2);
+                }
+            }
+            /*
+                Now we know how many mines we still need (valueCopy) and how many spaces are left
+            in which a mine can be placed (unknownPositions.size()). 
+            */
+            int numberOfLoops = valueCopy;
+            int numberOfPositions = static_cast<int>(unknownPositions.size());
+            vector<int> iterators;
+            for (int i = 0; i < numberOfLoops; ++i) {
+                iterators.push_back(i);
+            }
+            vector<vector<int>> iteratorsThatWork;
+
+            //Code for first set of iterators
+
+            Field fakeField = newField;
+            for (unsigned long i = 0; i < iterators.size(); ++i) {
+                fakeField.at(unknownPositions.at(iterators.at(i))).update('*');
+            }
+            set<int> fakeClickPositions;
+            bool works = evaluateSCC(fakeField, SCC, fakeClickPositions);
+            if (works == true) {
+                iteratorsThatWork.push_back(iterators);
+            }
+
+            while (advanceIterators(iterators, numberOfPositions) == false) {
+                
+                fakeField = newField;
+                for (unsigned long i = 0; i < iterators.size(); ++i) {
+                    fakeField.at(unknownPositions.at(iterators.at(i))).update('*');
+                }
+                bool works = evaluateSCC(fakeField, SCC, fakeClickPositions);
+                if (works == true) {
+                    iteratorsThatWork.push_back(iterators);
+                }
+            }
+
+            //If there is only one combination that worked, apply that one to the current position
+            if (iteratorsThatWork.size() == 1) {
+                iterators = iteratorsThatWork.at(0);
+                for (unsigned long i = 0; i < iterators.size(); ++i) {
+                    newField.at(unknownPositions.at(iterators.at(i))).update('*');
+                }
+            }
+
+
+        }
+
+
+        return;
+    }
+
+    Field deduction(set<int> &newClickPositions) {
+        Field newField(rows, columns, cells);
+        newField.clearPossibleMines();
+        newField.clearAdjacentNumberPositions();
+        newField.mapPossibleMinesAndNumbers();
+
+        set<int> cellsVisited;
+        vector<set<int>> allSCCs;
+        for (int i = 0; i < newField.size(); ++i) {
+            if (cellsVisited.find(i) == cellsVisited.end()) {
+                //Cell has not been visited
+                cellsVisited.insert(i);
+                set<int> SCC;
+                
+                if (newField.copyAt(i).isNumber() == true) {
+                    depthSearch(newField, i, cellsVisited, SCC, true);
+                    SCC.insert(i);
+                    allSCCs.push_back(SCC);
+                }
+            }
+        }
+        for (unsigned long i = 0; i < allSCCs.size(); ++i) {
+            deduceSCC(newField, allSCCs.at(i));
+            evaluateSCC(newField, allSCCs.at(i), newClickPositions);
+        }
 
         return newField;
     }
