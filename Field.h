@@ -21,6 +21,8 @@ private:
     int right = 1;
     int top;
     int bottom;
+    int minesFound = 0;
+    int totalMines;
 
 public:
     Field (int rows, int columns, vector<char> values) {
@@ -34,6 +36,7 @@ public:
         }
         this->top = columns * -1;
         this->bottom = columns;
+        this->totalMines = 90;
     }
     Field (int rows, int columns, vector<Cell> cells) {
         this->rows = rows;
@@ -41,6 +44,7 @@ public:
         this->cells = cells;
         this->top = columns * -1;
         this->bottom = columns;
+        this->totalMines = 90;
     }
 
     Field() {
@@ -48,6 +52,7 @@ public:
         this->columns = 0;
         this->top = 0;
         this->bottom = 0;
+        this->totalMines = 0;
     }
 
     int size() {
@@ -72,6 +77,22 @@ public:
 
     Cell copyAt(int position) {
         return cells.at(position);
+    }
+
+    void setMinesFound(int minesFound) {
+        this->minesFound = minesFound;
+    }
+
+    void foundMine() {
+        ++minesFound;
+    }
+
+    int getMinesFound() {
+        return minesFound;
+    }
+
+    int getTotalMines() {
+        return totalMines;
     }
 
     void update(int rowPosition, int columnPosition, char value) {
@@ -623,6 +644,7 @@ public:
                         unknownPositions.erase(unknownPositions.begin() + i);
                         --i;
                         ++changes;
+                        newField.foundMine();
                     }
                 }
                 if (valueCopy == 0 && static_cast<int>(unknownPositions.size()) > 0) {
@@ -637,7 +659,11 @@ public:
                 if (valueCopy < 0) {
                     return false;
                 }
-                if (valueCopy > static_cast<int>(unknownPositions.size())) {
+                else if (valueCopy > static_cast<int>(unknownPositions.size())) {
+                    return false;
+                }
+                else if (newField.getMinesFound() > newField.getTotalMines()) {
+                    cout << "Mines found: " << newField.getMinesFound() << ". Total Mines: " << newField.getTotalMines() << "." << endl;
                     return false;
                 }
             }
@@ -650,6 +676,7 @@ public:
 
     Field evaluate(set<int> &clickPositions) {
         Field newField(rows, columns, cells);
+        newField.setMinesFound(minesFound);
         /*
         First, we need to map out our field. The mapping process will complete two things:
         1)  The positions of neighbor cells around all number cells that could contain mines (# or *).
@@ -777,6 +804,7 @@ public:
             Field fakeField = newField;
             for (unsigned long i = 0; i < combination.size(); ++i) {
                 fakeField.at(unknownPositions.at(combination.at(i))).update('*');
+                fakeField.foundMine();
             }
             set<int> fakeClickPositions;
             bool works = evaluateSCC(fakeField, SCC, fakeClickPositions);
@@ -791,6 +819,7 @@ public:
                 fakeField = newField;
                 for (unsigned long i = 0; i < combination.size(); ++i) {
                     fakeField.at(unknownPositions.at(combination.at(i))).update('*');
+                    fakeField.foundMine();
                 }
                 bool works = evaluateSCC(fakeField, SCC, fakeClickPositions);
                 if (works == true) {
@@ -803,6 +832,7 @@ public:
                 combination = combinationsThatWork.at(0);
                 for (unsigned long i = 0; i < combination.size(); ++i) {
                     newField.at(unknownPositions.at(combination.at(i))).update('*');
+                    newField.foundMine();
                 }
             }
 
@@ -815,6 +845,7 @@ public:
 
     Field deduction(set<int> &newClickPositions) {
         Field newField(rows, columns, cells);
+        newField.setMinesFound(minesFound);
         newField.clearPossibleMines();
         newField.clearAdjacentNumberPositions();
         newField.mapPossibleMinesAndNumbers();

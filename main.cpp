@@ -11,7 +11,7 @@
 
 using namespace std;
 
-const int NUM_MINES = 80;
+const int NUM_MINES = 90;
 const int NUM_ROWS = 32;
 const int NUM_COLUMNS = 18;
 
@@ -288,6 +288,7 @@ int main(int argc, char* argv[]) {
         //We will create out own custom minefield.
         srand (time(NULL));
         set<int> minePositions = createMinePositions();
+        //set<int> minePositions = {23, 46, 55, 58, 68, 75, 84, 93, 95, 105, 124, 129, 137, 138, 154, 161, 169, 170, 174, 182, 188, 192, 194, 217, 221, 224, 230, 234, 245, 251, 256, 276, 278, 280, 290, 292, 296, 297, 299, 310, 319, 329, 340, 344, 348, 349, 358, 360, 364, 368, 388, 392, 394, 397, 404, 407, 408, 409, 413, 418, 419, 434, 447, 448, 477, 478, 482, 504, 521, 522, 530, 531, 533, 537, 540, 544, 556, 564, 565, 566};
         vector<char> values;
         for (int i = 0; i < (NUM_ROWS * NUM_COLUMNS); ++i) {
             if (minePositions.find(i) == minePositions.end()) {
@@ -375,7 +376,9 @@ int main(int argc, char* argv[]) {
         }
         else {
             gameField.toString();
-            cout << endl << "That's a tough MineField! We couldn't crack it! At this point, the solution is only knowable if you were to guess." << endl << endl;
+            cout << endl << "That's a tough MineField! We couldn't crack it!" << endl;
+            cout << endl << "We found " << gameField.getMinesFound() << " mines out of " << NUM_MINES << "." << endl;
+            cout << endl << "The solution is only knowable if you were to guess." << endl;
         }
     }
 
