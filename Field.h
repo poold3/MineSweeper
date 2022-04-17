@@ -633,6 +633,7 @@ public:
                         ++changes;
                     }
                 }
+                //The following if statements are for deductions only. This will tell the program that the current possibility being tested is incorrect.
                 if (valueCopy < 0) {
                     return false;
                 }
@@ -650,22 +651,22 @@ public:
     Field evaluate(set<int> &clickPositions) {
         Field newField(rows, columns, cells);
         /*
-            First, we need to map out our field. The mapping process will complete two things:
-                1)  The positions of neighbor cells around all number cells that could contain mines (# or *).
-                2)  The positions of neighbor cells around all number cells that are also number cells.
-                    Step 2 looks for neighbor cells that are numbers from the closest 2 rings
-                    that surround the current number cell.
+        First, we need to map out our field. The mapping process will complete two things:
+        1)  The positions of neighbor cells around all number cells that could contain mines (# or *).
+        2)  The positions of neighbor cells around all number cells that are also number cells.
+            Step 2 looks for neighbor cells that are numbers from the closest 2 rings
+            that surround the current number cell.
         */
         newField.clearPossibleMines();
         newField.clearAdjacentNumberPositions();
         newField.mapPossibleMinesAndNumbers();
 
         /*
-                Second, we need to identify the Strongly Connected Components (SCCs) based on our map.
-            An SCC is a group of number cells that when evaluated individually can affect the way we
-            evaluate the other number cells in the group. In simple terms, an SCC for our purposes is
-            a chain of number cells where each number cell shares a neighbor that could contain a mine
-            with at least one other number cell in the chain.
+        Second, we need to identify the Strongly Connected Components (SCCs) based on our map.
+        An SCC is a group of number cells that when evaluated individually can affect the way we
+        evaluate the other number cells in the group. In simple terms, an SCC for our purposes is
+        a chain of number cells where each number cell shares a neighbor that could contain a mine
+        with at least one other number cell in the chain.
         */
         set<int> cellsVisited;
         vector<set<int>> allSCCs;
@@ -702,17 +703,16 @@ public:
             evaluateSCC(newField, allSCCs.at(i), clickPositions);
         }
 
-
         return newField;
     }
 
-    static bool advanceIterators(vector<int> &iterators, int numberOfPositions) {
-        //Purpose of this function is to advance the iterators to the next possible combination
+    static bool advanceCombination(vector<int> &combination, int numberOfPositions) {
+        //Purpose of this function is to advance the combination to the next possible combination
         bool finished = true;
         int counter = 1;
         
-        for (int i = static_cast<int>(iterators.size()) - 1; i >= 0; --i) {
-            if (iterators.at(i) != numberOfPositions - counter) {
+        for (int i = static_cast<int>(combination.size()) - 1; i >= 0; --i) {
+            if (combination.at(i) != numberOfPositions - counter) {
                 
                 finished = false;
                 break;
@@ -724,18 +724,18 @@ public:
             return true;
         }
         
-        //We are not done. Update iterators to the next positions
-        if (iterators.at(iterators.size() - 1) != numberOfPositions - 1) {
-            ++iterators.at(iterators.size() - 1);
+        //We are not done. Update combination to the next positions
+        if (combination.at(combination.size() - 1) != numberOfPositions - 1) {
+            ++combination.at(combination.size() - 1);
             return false;
         }
 
         counter = 2;
-        for (unsigned long i = iterators.size() - 2; i >= 0; --i) {
-            if (iterators.at(i) != numberOfPositions - counter) {
-                ++iterators.at(i);
-                for (unsigned long j = i + 1; j < iterators.size(); ++j) {
-                    iterators.at(j) =  iterators.at(j - 1) + 1;
+        for (unsigned long i = combination.size() - 2; i >= 0; --i) {
+            if (combination.at(i) != numberOfPositions - counter) {
+                ++combination.at(i);
+                for (unsigned long j = i + 1; j < combination.size(); ++j) {
+                    combination.at(j) =  combination.at(j - 1) + 1;
                 }
                 return false;
             }
@@ -746,10 +746,10 @@ public:
 
     static void deduceSCC(Field &newField, set<int> &SCC) {
         for (auto& position : SCC) {
+            /* Find adjacent cell possible mines for each value in the SCC */
             Cell currentCell = newField.at(position);
             char value = currentCell.getValue();
-            int iValue = value - '0';
-            int valueCopy = iValue;
+            int valueCopy = value - '0';
             vector<int> unknownPositions;
             set<int> possibleMinePositions = currentCell.getAdjacentPossibleMinePositions();
             for (auto& position2 : possibleMinePositions) {
@@ -766,41 +766,43 @@ public:
             */
             int numberOfLoops = valueCopy;
             int numberOfPositions = static_cast<int>(unknownPositions.size());
-            vector<int> iterators;
+            vector<int> combination;
             for (int i = 0; i < numberOfLoops; ++i) {
-                iterators.push_back(i);
+                combination.push_back(i);
             }
-            vector<vector<int>> iteratorsThatWork;
+            vector<vector<int>> combinationsThatWork;
 
-            //Code for first set of iterators
+            //Code for first combination
 
             Field fakeField = newField;
-            for (unsigned long i = 0; i < iterators.size(); ++i) {
-                fakeField.at(unknownPositions.at(iterators.at(i))).update('*');
+            for (unsigned long i = 0; i < combination.size(); ++i) {
+                fakeField.at(unknownPositions.at(combination.at(i))).update('*');
             }
             set<int> fakeClickPositions;
             bool works = evaluateSCC(fakeField, SCC, fakeClickPositions);
             if (works == true) {
-                iteratorsThatWork.push_back(iterators);
+                combinationsThatWork.push_back(combination);
             }
 
-            while (advanceIterators(iterators, numberOfPositions) == false) {
+            //Loop through the rest of possible combinations
+
+            while (advanceCombination(combination, numberOfPositions) == false) {
                 
                 fakeField = newField;
-                for (unsigned long i = 0; i < iterators.size(); ++i) {
-                    fakeField.at(unknownPositions.at(iterators.at(i))).update('*');
+                for (unsigned long i = 0; i < combination.size(); ++i) {
+                    fakeField.at(unknownPositions.at(combination.at(i))).update('*');
                 }
                 bool works = evaluateSCC(fakeField, SCC, fakeClickPositions);
                 if (works == true) {
-                    iteratorsThatWork.push_back(iterators);
+                    combinationsThatWork.push_back(combination);
                 }
             }
 
             //If there is only one combination that worked, apply that one to the current position
-            if (iteratorsThatWork.size() == 1) {
-                iterators = iteratorsThatWork.at(0);
-                for (unsigned long i = 0; i < iterators.size(); ++i) {
-                    newField.at(unknownPositions.at(iterators.at(i))).update('*');
+            if (combinationsThatWork.size() == 1) {
+                combination = combinationsThatWork.at(0);
+                for (unsigned long i = 0; i < combination.size(); ++i) {
+                    newField.at(unknownPositions.at(combination.at(i))).update('*');
                 }
             }
 
