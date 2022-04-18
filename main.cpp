@@ -11,7 +11,7 @@
 
 using namespace std;
 
-const int NUM_MINES = 90;
+const int NUM_MINES = 95;
 const int NUM_ROWS = 32;
 const int NUM_COLUMNS = 18;
 
@@ -288,7 +288,7 @@ int main(int argc, char* argv[]) {
         //We will create out own custom minefield.
         srand (time(NULL));
         set<int> minePositions = createMinePositions();
-        //set<int> minePositions = {23, 46, 55, 58, 68, 75, 84, 93, 95, 105, 124, 129, 137, 138, 154, 161, 169, 170, 174, 182, 188, 192, 194, 217, 221, 224, 230, 234, 245, 251, 256, 276, 278, 280, 290, 292, 296, 297, 299, 310, 319, 329, 340, 344, 348, 349, 358, 360, 364, 368, 388, 392, 394, 397, 404, 407, 408, 409, 413, 418, 419, 434, 447, 448, 477, 478, 482, 504, 521, 522, 530, 531, 533, 537, 540, 544, 556, 564, 565, 566};
+        //set<int> minePositions = {2, 5, 28, 35, 37, 44, 46, 60, 61, 62, 75, 76, 82, 99, 103, 105, 117, 121, 126, 128, 137, 148, 158, 167, 171, 172, 177, 182, 184, 194, 202, 205, 207, 221, 227, 229, 230, 239, 242, 249, 258, 261, 266, 280, 283, 288, 295, 296, 314, 330, 336, 344, 345, 346, 352, 364, 367, 378, 379, 383, 385, 393, 396, 403, 410, 412, 413, 416, 419, 422, 425, 429, 444, 449, 453, 454, 456, 461, 463, 470, 479, 481, 482, 487, 498, 511, 512, 517, 526, 529, 537, 538, 549, 556, 575};
         vector<char> values;
         for (int i = 0; i < (NUM_ROWS * NUM_COLUMNS); ++i) {
             if (minePositions.find(i) == minePositions.end()) {
@@ -303,6 +303,8 @@ int main(int argc, char* argv[]) {
         cout << endl;
         //Generate Number values around each mine in the field.
         keyField.generateNumberCells();
+        keyField.toString();
+        cout << endl;
         //Generate our gameField with a 'c' on our starting position
         Field gameField;
         try {
@@ -341,7 +343,7 @@ int main(int argc, char* argv[]) {
                 }
                 catch(exception& e) {
                     cout << endl << e.what() << endl << endl;
-                    break;
+                    return 0;
                 }
             }
             else {
@@ -350,7 +352,9 @@ int main(int argc, char* argv[]) {
                 }
                 else {
                     cout << "Trying Deductions" << endl;
-                    getline(cin, answer);
+                    // if (skip == false) {
+                    //     getline(cin, answer);
+                    // }
                     set<int> newClickPositions;
                     gameField = gameField.deduction(newClickPositions);
                     if (newClickPositions.size() == 0) {
@@ -363,7 +367,7 @@ int main(int argc, char* argv[]) {
                         }
                         catch(exception& e) {
                             cout << endl << e.what() << endl << endl;
-                            break;
+                            return 0;
                         }
                     }
                 }

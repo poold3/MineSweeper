@@ -36,7 +36,7 @@ public:
         }
         this->top = columns * -1;
         this->bottom = columns;
-        this->totalMines = 90;
+        this->totalMines = 95;
     }
     Field (int rows, int columns, vector<Cell> cells) {
         this->rows = rows;
@@ -44,7 +44,7 @@ public:
         this->cells = cells;
         this->top = columns * -1;
         this->bottom = columns;
-        this->totalMines = 90;
+        this->totalMines = 95;
     }
 
     Field() {
@@ -111,6 +111,72 @@ public:
         }
 
         return solved;
+    }
+
+    bool needMoreMines() {
+        /* Return true if all numbers do not have sufficient mines. Return false if all numbers
+        have sufficient mines 
+        
+        Iteratate through all number cells. See if number of mines present equals the value.
+        */
+        const int LEFT_EDGE = 0;
+        const int RIGHT_EDGE = columns - 1;
+        for (auto& cell : cells) {
+            if (cell.isNumber() == true) {
+                int currentCellPosition = cell.getPosition();
+                char value = cell.getValue();
+                int iValue = value - '0';
+                int numberOfMines = 0;
+                if (currentCellPosition + top + left >= 0 && cells.at(currentCellPosition).getColumnPosition() != LEFT_EDGE) {
+                    if (cells.at(currentCellPosition + top + left).isMine() == true) {
+                        ++numberOfMines;
+                    }
+                }
+                if (currentCellPosition + top >= 0) {
+                    if (cells.at(currentCellPosition + top).isMine() == true) {
+                        ++numberOfMines;
+                    }
+                }
+                if (currentCellPosition + top + right >= 0 && cells.at(currentCellPosition).getColumnPosition() != RIGHT_EDGE){
+                    if (cells.at(currentCellPosition + top + right).isMine() == true) {
+                        ++numberOfMines;
+                    }
+                }
+                if (currentCellPosition + left >= 0  && cells.at(currentCellPosition).getColumnPosition() != LEFT_EDGE) {
+                    if (cells.at(currentCellPosition + left).isMine() == true) {
+                        ++numberOfMines;
+                    }
+                }
+                
+                if (currentCellPosition + right < static_cast<int>(cells.size()) && cells.at(currentCellPosition).getColumnPosition() != RIGHT_EDGE) {
+                   if (cells.at(currentCellPosition + right).isMine() == true) {
+                        ++numberOfMines;
+                    }
+                }
+                
+                if (currentCellPosition + bottom + left < static_cast<int>(cells.size()) && cells.at(currentCellPosition).getColumnPosition() != LEFT_EDGE) {
+                    if (cells.at(currentCellPosition + bottom + left).isMine() == true) {
+                        ++numberOfMines;
+                    }
+                }
+                if (currentCellPosition + bottom < static_cast<int>(cells.size())) {
+                    if (cells.at(currentCellPosition + bottom).isMine() == true) {
+                        ++numberOfMines;
+                    }
+                }
+                if (currentCellPosition + bottom + right < static_cast<int>(cells.size()) && cells.at(currentCellPosition).getColumnPosition() != RIGHT_EDGE) {
+                    if (cells.at(currentCellPosition + bottom + right).isMine() == true) {
+                        ++numberOfMines;
+                    }
+                }
+                if (numberOfMines < iValue) {
+                    return true;
+                }
+
+            }
+        }
+
+        return false;
     }
 
     void toString() {
@@ -615,7 +681,7 @@ public:
         return;
     }
 
-    static bool evaluateSCC(Field &newField, set<int> &SCC, set<int> &clickPositions) {
+    static bool evaluateSCC(Field &newField, set<int> &SCC, set<int> &clickPositions, bool performingDeduction = false) {
         int changes = 0;
         int changeCounter = 1;
         int counter = 0;
@@ -655,16 +721,31 @@ public:
                         ++changes;
                     }
                 }
-                //The following if statements are for deductions only. This will tell the program that the current possibility being tested is incorrect.
-                if (valueCopy < 0) {
-                    return false;
-                }
-                else if (valueCopy > static_cast<int>(unknownPositions.size())) {
-                    return false;
-                }
-                else if (newField.getMinesFound() > newField.getTotalMines()) {
-                    cout << "Mines found: " << newField.getMinesFound() << ". Total Mines: " << newField.getTotalMines() << "." << endl;
-                    return false;
+                if (performingDeduction == true) {
+                    //The following if statements are for deductions only. This will tell the program that the current possibility being tested is incorrect.
+                    if (valueCopy < 0) {
+                        return false;
+                    }
+                    else if (valueCopy > static_cast<int>(unknownPositions.size())) {
+                        return false;
+                    }
+                    else if (newField.getMinesFound() > newField.getTotalMines()) {
+                        cout << "Mines found: " << newField.getMinesFound() << ". Total Mines: " << newField.getTotalMines() << "." << endl;
+                        return false;
+                    }
+                    else if (newField.getMinesFound() == newField.getTotalMines() && newField.needMoreMines() == true) {
+                        cout << "Still need more mines, but we are at mine total." << endl;
+                        return false;
+                    }
+                    /*
+                    ** This does not work because there may be numbers that we have not uncovered
+                    ** that still need more mines.
+                    else if (newField.getMinesFound() < newField.getTotalMines() && newField.needMoreMines() == false) {
+                        cout << "Don't need more mines, but we are not at mine total." << endl;
+                        return false;
+                    }
+                    */
+                    
                 }
             }
         }
@@ -807,7 +888,7 @@ public:
                 fakeField.foundMine();
             }
             set<int> fakeClickPositions;
-            bool works = evaluateSCC(fakeField, SCC, fakeClickPositions);
+            bool works = evaluateSCC(fakeField, SCC, fakeClickPositions, true);
             if (works == true) {
                 combinationsThatWork.push_back(combination);
             }
@@ -821,7 +902,7 @@ public:
                     fakeField.at(unknownPositions.at(combination.at(i))).update('*');
                     fakeField.foundMine();
                 }
-                bool works = evaluateSCC(fakeField, SCC, fakeClickPositions);
+                bool works = evaluateSCC(fakeField, SCC, fakeClickPositions, true);
                 if (works == true) {
                     combinationsThatWork.push_back(combination);
                 }
