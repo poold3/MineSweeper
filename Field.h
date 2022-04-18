@@ -25,7 +25,7 @@ private:
     int totalMines;
 
 public:
-    Field (int rows, int columns, vector<char> values) {
+    Field (int rows, int columns, vector<char> values, int totalMines) {
         this->rows = rows;
         this->columns = columns;
         for (int i = 0; i < rows * columns; ++i) {
@@ -36,15 +36,15 @@ public:
         }
         this->top = columns * -1;
         this->bottom = columns;
-        this->totalMines = 95;
+        this->totalMines = totalMines;
     }
-    Field (int rows, int columns, vector<Cell> cells) {
+    Field (int rows, int columns, vector<Cell> cells, int totalMines) {
         this->rows = rows;
         this->columns = columns;
         this->cells = cells;
         this->top = columns * -1;
         this->bottom = columns;
-        this->totalMines = 95;
+        this->totalMines = totalMines;
     }
 
     Field() {
@@ -405,7 +405,7 @@ public:
             }
         }
 
-        Field gameField(NUM_ROWS, NUM_COLUMNS, values);
+        Field gameField(NUM_ROWS, NUM_COLUMNS, values, totalMines);
         return gameField;
     }
 
@@ -730,11 +730,11 @@ public:
                         return false;
                     }
                     else if (newField.getMinesFound() > newField.getTotalMines()) {
-                        cout << "Mines found: " << newField.getMinesFound() << ". Total Mines: " << newField.getTotalMines() << "." << endl;
+                        //cout << "Mines found: " << newField.getMinesFound() << ". Total Mines: " << newField.getTotalMines() << "." << endl;
                         return false;
                     }
                     else if (newField.getMinesFound() == newField.getTotalMines() && newField.needMoreMines() == true) {
-                        cout << "Still need more mines, but we are at mine total." << endl;
+                        //cout << "Still need more mines, but we are at mine total." << endl;
                         return false;
                     }
                     /*
@@ -756,7 +756,7 @@ public:
     }
 
     Field evaluate(set<int> &clickPositions) {
-        Field newField(rows, columns, cells);
+        Field newField(rows, columns, cells, totalMines);
         newField.setMinesFound(minesFound);
         /*
         First, we need to map out our field. The mapping process will complete two things:
@@ -925,7 +925,7 @@ public:
     }
 
     Field deduction(set<int> &newClickPositions) {
-        Field newField(rows, columns, cells);
+        Field newField(rows, columns, cells, totalMines);
         newField.setMinesFound(minesFound);
         newField.clearPossibleMines();
         newField.clearAdjacentNumberPositions();

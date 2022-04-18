@@ -11,7 +11,7 @@
 
 using namespace std;
 
-const int NUM_MINES = 95;
+int NUM_MINES = 90;
 const int NUM_ROWS = 32;
 const int NUM_COLUMNS = 18;
 
@@ -174,7 +174,7 @@ set<int> createMinePositions() {
         [*][*]
 
         */
-        while (minePositions.size() < NUM_MINES) {
+        while (static_cast<int>(minePositions.size()) < NUM_MINES) {
             int position = rand() % (NUM_ROWS * NUM_COLUMNS);
             if (minePositions.find(position) == minePositions.end()) {
                 int openSpaces = findOpenSpaces(minePositions, position);
@@ -298,14 +298,13 @@ int main(int argc, char* argv[]) {
                 values.push_back('*');
             }
         }
-        Field keyField(NUM_ROWS, NUM_COLUMNS, values);
-        keyField.toString();
-        cout << endl;
-        //Generate Number values around each mine in the field.
+        Field keyField(NUM_ROWS, NUM_COLUMNS, values, NUM_MINES);
+        // keyField.toString();
+        // cout << endl;
         keyField.generateNumberCells();
-        keyField.toString();
-        cout << endl;
-        //Generate our gameField with a 'c' on our starting position
+        // keyField.toString();
+        // cout << endl;
+        // return 0;
         Field gameField;
         try {
             gameField = keyField.generateGameField(NUM_ROWS, NUM_COLUMNS);
@@ -352,9 +351,6 @@ int main(int argc, char* argv[]) {
                 }
                 else {
                     cout << "Trying Deductions" << endl;
-                    // if (skip == false) {
-                    //     getline(cin, answer);
-                    // }
                     set<int> newClickPositions;
                     gameField = gameField.deduction(newClickPositions);
                     if (newClickPositions.size() == 0) {
@@ -433,16 +429,28 @@ int main(int argc, char* argv[]) {
         int rows = scanner.getRows();
         int columns = scanner.getColumns();
         vector<char> values = parser.getValues();
-        Field field(rows, columns, values);
+        cout << "How many mines does this field contain? ";
+        cin >> NUM_MINES;
+        cin.ignore();
+        Field field(rows, columns, values, NUM_MINES);
 
         cout << "\nLoaded Field:" << endl;
         field.toString();
         cout << endl;
         set<int> clickPositions;
         Field newField = field.evaluate(clickPositions);
+        if (clickPositions.size() == 0) {
+            newField = newField.deduction(clickPositions);
+        }
 
         cout << endl << endl << "Final Field." << endl;
         newField.toString();
+        if (clickPositions.size() == 0) {
+            cout << endl << "No new information found!" << endl;
+        }
+        else {
+            cout << endl << "New information found!" << endl;
+        }
 
         ofstream outfile;
         outfile.open(inputFile);
