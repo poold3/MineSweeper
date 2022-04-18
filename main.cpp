@@ -371,10 +371,12 @@ int main(int argc, char* argv[]) {
         }
 
         if (solved == true) {
+            cout << endl;
             gameField.toString();
             cout << endl << "Solved!" << endl << endl;
         }
         else {
+            cout << endl;
             gameField.toString();
             cout << endl << "That's a tough MineField! We couldn't crack it!" << endl;
             cout << endl << "We found " << gameField.getMinesFound() << " mines out of " << NUM_MINES << "." << endl;
