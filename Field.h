@@ -725,17 +725,19 @@ public:
                 if (performingDeduction == true) {
                     //The following if statements are for deductions only. This will tell the program that the current possibility being tested is incorrect.
                     if (valueCopy < 0) {
+                        //cout << "Too many mines for a cell." << endl;
                         return false;
                     }
                     else if (valueCopy > static_cast<int>(unknownPositions.size())) {
+                        //cout << "Not enough spaces for mines for a cell." << endl;
                         return false;
                     }
                     else if (newField.getMinesFound() > newField.getTotalMines()) {
-                        //cout << "Mines found: " << newField.getMinesFound() << ". Total Mines: " << newField.getTotalMines() << "." << endl;
+                        //cout << "Too many total mines." << endl;
                         return false;
                     }
                     else if (newField.getMinesFound() == newField.getTotalMines() && newField.needMoreMines() == true) {
-                        //cout << "Still need more mines, but we are at mine total." << endl;
+                        //cout << "Need more total mines" << endl;
                         return false;
                     }
                     /*
@@ -876,100 +878,107 @@ public:
             */
             int numberOfLoops = valueCopy;
             int numberOfPositions = static_cast<int>(unknownPositions.size());
-            vector<int> combination;
-            for (int i = 0; i < numberOfLoops; ++i) {
-                combination.push_back(i);
-            }
-            vector<vector<int>> combinationsThatWork;
-            vector<set<int>> minePositionsAdded;
-            vector<set<int>> clickPositionsAdded;
 
-            //Code for first combination
-            set<int> minePositions;
-            set<int> clickPositions;
+            if (numberOfLoops > 0) {
+                vector<int> combination;
+                for (int i = 0; i < numberOfLoops; ++i) {
+                    combination.push_back(i);
+                }
+                vector<vector<int>> combinationsThatWork;
+                vector<set<int>> minePositionsAdded;
+                vector<set<int>> clickPositionsAdded;
 
-            Field fakeField = newField;
-            for (unsigned long i = 0; i < combination.size(); ++i) {
-                fakeField.at(unknownPositions.at(combination.at(i))).update('*');
-                fakeField.foundMine();
-            }
-            
-            bool works = evaluateSCC(fakeField, SCC, clickPositions, minePositions, true);
-            
-            if (works == true) {
-                combinationsThatWork.push_back(combination);
-                minePositionsAdded.push_back(minePositions);
-                clickPositionsAdded.push_back(clickPositions);
-            }
+                //Code for first combination
+                set<int> minePositions;
+                set<int> clickPositions;
 
-            //Loop through the rest of possible combinations
-
-            while (advanceCombination(combination, numberOfPositions) == false) {
-                minePositions.clear();
-                clickPositions.clear();
-                fakeField = newField;
+                Field fakeField = newField;
                 for (unsigned long i = 0; i < combination.size(); ++i) {
                     fakeField.at(unknownPositions.at(combination.at(i))).update('*');
                     fakeField.foundMine();
                 }
+                
                 bool works = evaluateSCC(fakeField, SCC, clickPositions, minePositions, true);
                 
                 if (works == true) {
+                    if (numberOfLoops == 0) {
+                        cout << "Zero Loops2" << endl;
+                    }
                     combinationsThatWork.push_back(combination);
                     minePositionsAdded.push_back(minePositions);
                     clickPositionsAdded.push_back(clickPositions);
                 }
-            }
 
-            //If there is only one combination that worked, apply that one to the current position
-            if (combinationsThatWork.size() == 1) {
-                combination = combinationsThatWork.at(0);
-                for (unsigned long i = 0; i < combination.size(); ++i) {
-                    newField.at(unknownPositions.at(combination.at(i))).update('*');
-                    newField.foundMine();
-                }
-            }
-            /* If in every possible combination for a number, there are cells from 
-            the resulting deductions that are always the same (either mine or
-            empty), apply those to the field*/
-            else if (combinationsThatWork.size() > 1) {
-                bool addMinePosition = true;
-                for (auto& minePosition : minePositionsAdded.at(0)) {
-                    addMinePosition = true;
-                    for (unsigned long i = 1; i < minePositionsAdded.size(); ++i) {
-                        if (minePositionsAdded.at(i).find(minePosition) == minePositionsAdded.at(i).end()) {
-                            addMinePosition = false;
-                            break;
-                        }
+                //Loop through the rest of possible combinations
+
+                while (advanceCombination(combination, numberOfPositions) == false) {
+                    minePositions.clear();
+                    clickPositions.clear();
+                    fakeField = newField;
+                    for (unsigned long i = 0; i < combination.size(); ++i) {
+                        fakeField.at(unknownPositions.at(combination.at(i))).update('*');
+                        fakeField.foundMine();
                     }
-                    if (addMinePosition == true) {
-                        //Add this position as a mine!
-                        //cout << "Found mine!" << endl;
-                        newField.at(minePosition).update('*');
+                    bool works = evaluateSCC(fakeField, SCC, clickPositions, minePositions, true);
+                    
+                    if (works == true) {
+                        combinationsThatWork.push_back(combination);
+                        minePositionsAdded.push_back(minePositions);
+                        clickPositionsAdded.push_back(clickPositions);
+                    }
+                }
+
+                //If there is only one combination that worked, apply that one to the current position
+                if (combinationsThatWork.size() == 1) {
+                    cout << "One combo that works." << endl;
+                    combination = combinationsThatWork.at(0);
+                    for (unsigned long i = 0; i < combination.size(); ++i) {
+                        newField.at(unknownPositions.at(combination.at(i))).update('*');
                         newField.foundMine();
-                        reevaluate = true;
                     }
                 }
-
-                bool addClickPosition = true;
-                for (auto& clickPosition : clickPositionsAdded.at(0)) {
-                    addClickPosition = true;
-                    for (unsigned long i = 1; i < clickPositionsAdded.size(); ++i) {
-                        if (clickPositionsAdded.at(i).find(clickPosition) == clickPositionsAdded.at(i).end()) {
-                            addClickPosition = false;
-                            break;
+                /* If in every possible combination for a number, there are cells from 
+                the resulting deductions that are always the same (either mine or
+                empty), apply those to the field*/
+                else if (combinationsThatWork.size() > 1) {
+                    bool addMinePosition = true;
+                    for (auto& minePosition : minePositionsAdded.at(0)) {
+                        addMinePosition = true;
+                        for (unsigned long i = 1; i < minePositionsAdded.size(); ++i) {
+                            if (minePositionsAdded.at(i).find(minePosition) == minePositionsAdded.at(i).end()) {
+                                addMinePosition = false;
+                                break;
+                            }
+                        }
+                        if (addMinePosition == true) {
+                            //Add this position as a mine!
+                            cout << "Found mine!" << endl;
+                            newField.at(minePosition).update('*');
+                            newField.foundMine();
+                            reevaluate = true;
                         }
                     }
-                    if (addClickPosition == true) {
-                        //Add this position as a click!
-                        //cout << "Found click!" << endl;
-                        newField.at(clickPosition).update('c');
-                        newClickPositions.insert(clickPosition);
+
+                    bool addClickPosition = true;
+                    for (auto& clickPosition : clickPositionsAdded.at(0)) {
+                        addClickPosition = true;
+                        for (unsigned long i = 1; i < clickPositionsAdded.size(); ++i) {
+                            if (clickPositionsAdded.at(i).find(clickPosition) == clickPositionsAdded.at(i).end()) {
+                                addClickPosition = false;
+                                break;
+                            }
+                        }
+                        if (addClickPosition == true) {
+                            //Add this position as a click!
+                            cout << "Found click!" << endl;
+                            newField.at(clickPosition).update('c');
+                            newClickPositions.insert(clickPosition);
+                        }
                     }
                 }
+
+
             }
-
-
         }
 
 
