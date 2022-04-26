@@ -26,21 +26,21 @@ void findEmptyCells(set<int> &minePositions, set<int> &cellsVisited, int positio
         int columnPosition = position % NUM_COLUMNS;
         cellsVisited.insert(position);
 
-        if (position + top + left >= 0 && columnPosition != LEFT_EDGE) {
-            if (minePositions.find(position + top + left) == minePositions.end()) {
-                findEmptyCells(minePositions, cellsVisited, position + top + left);
-            }
-        }
+        // if (position + top + left >= 0 && columnPosition != LEFT_EDGE) {
+        //     if (minePositions.find(position + top + left) == minePositions.end()) {
+        //         findEmptyCells(minePositions, cellsVisited, position + top + left);
+        //     }
+        // }
         if (position + top >= 0) {
             if (minePositions.find(position + top) == minePositions.end()) {
                 findEmptyCells(minePositions, cellsVisited, position + top);
             }
         }
-        if (position + top + right >= 0 && columnPosition != RIGHT_EDGE) {
-            if (minePositions.find(position + top + right) == minePositions.end()) {
-                findEmptyCells(minePositions, cellsVisited, position + top + right);
-            }
-        }
+        // if (position + top + right >= 0 && columnPosition != RIGHT_EDGE) {
+        //     if (minePositions.find(position + top + right) == minePositions.end()) {
+        //         findEmptyCells(minePositions, cellsVisited, position + top + right);
+        //     }
+        // }
         if (position + left >= 0  && columnPosition != LEFT_EDGE) {
             if (minePositions.find(position + left) == minePositions.end()) {
                 findEmptyCells(minePositions, cellsVisited, position + left);
@@ -51,21 +51,21 @@ void findEmptyCells(set<int> &minePositions, set<int> &cellsVisited, int positio
                 findEmptyCells(minePositions, cellsVisited, position + right);
             }
         }
-        if (position + bottom + left < (NUM_ROWS * NUM_COLUMNS) && columnPosition != LEFT_EDGE) {
-            if (minePositions.find(position + bottom + left) == minePositions.end()) {
-                findEmptyCells(minePositions, cellsVisited, position + bottom + left);
-            }
-        }
+        // if (position + bottom + left < (NUM_ROWS * NUM_COLUMNS) && columnPosition != LEFT_EDGE) {
+        //     if (minePositions.find(position + bottom + left) == minePositions.end()) {
+        //         findEmptyCells(minePositions, cellsVisited, position + bottom + left);
+        //     }
+        // }
         if (position + bottom < (NUM_ROWS * NUM_COLUMNS)) {
             if (minePositions.find(position + bottom) == minePositions.end()) {
                 findEmptyCells(minePositions, cellsVisited, position + bottom);
             }
         }
-        if (position + bottom + right < (NUM_ROWS * NUM_COLUMNS) && columnPosition != RIGHT_EDGE) {
-            if (minePositions.find(position + bottom + right) == minePositions.end()) {
-                findEmptyCells(minePositions, cellsVisited, position + bottom + right);
-            }
-        }
+        // if (position + bottom + right < (NUM_ROWS * NUM_COLUMNS) && columnPosition != RIGHT_EDGE) {
+        //     if (minePositions.find(position + bottom + right) == minePositions.end()) {
+        //         findEmptyCells(minePositions, cellsVisited, position + bottom + right);
+        //     }
+        // }
 
     }
 
@@ -288,6 +288,7 @@ int main(int argc, char* argv[]) {
         //We will create out own custom minefield.
         srand (time(NULL));
         set<int> minePositions = createMinePositions();
+        //set<int> minePositions = {1, 2, 16, 22, 25, 26, 33, 44, 45, 52, 62, 69, 89, 93, 98, 109, 121, 129, 145, 148, 160, 170, 181, 184, 185, 199, 207, 212, 214, 215, 218, 219, 221, 223, 227, 230, 234, 241, 254, 257, 258, 259, 269, 272, 276, 279, 282, 284, 288, 292, 296, 299, 313, 317, 321, 331, 338, 339, 342, 361, 368, 373, 375, 379, 398, 401, 402, 404, 416, 419, 425, 436, 438, 445, 450, 468, 472, 474, 475, 476, 477, 478, 479, 482, 488, 496, 504, 508, 509, 510, 514, 521, 522, 525, 535, 541, 548, 557, 560};
         vector<char> values;
         for (int i = 0; i < (NUM_ROWS * NUM_COLUMNS); ++i) {
             if (minePositions.find(i) == minePositions.end()) {
@@ -298,8 +299,8 @@ int main(int argc, char* argv[]) {
             }
         }
         Field keyField(NUM_ROWS, NUM_COLUMNS, values, NUM_MINES);
-        // keyField.toString();
-        // cout << endl;
+        keyField.toString();
+        cout << endl;
         keyField.generateNumberCells();
         // keyField.toString();
         // cout << endl;
@@ -351,8 +352,9 @@ int main(int argc, char* argv[]) {
                 else {
                     cout << "Trying Deductions" << endl;
                     set<int> newClickPositions;
-                    gameField = gameField.deduction(newClickPositions);
-                    if (newClickPositions.size() == 0) {
+                    bool reevaluate = false;
+                    gameField = gameField.deduction(newClickPositions, reevaluate);
+                    if (newClickPositions.size() == 0 && reevaluate == false) {
                         break;
                     }
                     else {
@@ -441,13 +443,14 @@ int main(int argc, char* argv[]) {
         cout << endl;
         set<int> clickPositions;
         Field newField = field.evaluate(clickPositions);
+        bool reevaluate = false;
         if (clickPositions.size() == 0) {
-            newField = newField.deduction(clickPositions);
+            newField = newField.deduction(clickPositions, reevaluate);
         }
 
         cout << endl << endl << "Final Field." << endl;
         newField.toString();
-        if (clickPositions.size() == 0) {
+        if (clickPositions.size() == 0 && reevaluate == false) {
             cout << endl << "No new information found!" << endl;
         }
         else {

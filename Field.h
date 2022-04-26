@@ -681,7 +681,7 @@ public:
         return;
     }
 
-    static bool evaluateSCC(Field &newField, set<int> &SCC, set<int> &clickPositions, bool performingDeduction = false) {
+    static bool evaluateSCC(Field &newField, set<int> &SCC, set<int> &clickPositions, set<int> &minePositions, bool performingDeduction = false) {
         int changes = 0;
         int changeCounter = 1;
         int counter = 0;
@@ -706,6 +706,7 @@ public:
                     //Convert all '#' around cell to '*'
                     for (unsigned long i = 0; i < unknownPositions.size(); ++i) {
                         newField.at(unknownPositions.at(i)).update('*');
+                        minePositions.insert(unknownPositions.at(i));
                         --valueCopy;
                         unknownPositions.erase(unknownPositions.begin() + i);
                         --i;
@@ -745,7 +746,7 @@ public:
                         return false;
                     }
                     */
-                    
+
                 }
             }
         }
@@ -806,9 +807,9 @@ public:
         algorithm that will continue to try and solve that SCC until there are no new changes
         being made.
         */
-        
+        set<int> minePositions;
         for (unsigned long i = 0; i < allSCCs.size(); ++i) {
-            evaluateSCC(newField, allSCCs.at(i), clickPositions);
+            evaluateSCC(newField, allSCCs.at(i), clickPositions, minePositions);
         }
 
         return newField;
@@ -852,8 +853,9 @@ public:
         return false;
     }
 
-    static void deduceSCC(Field &newField, set<int> &SCC) {
+    static void deduceSCC(Field &newField, set<int> &SCC, set<int> &newClickPositions, bool &reevaluate) {
         for (auto& position : SCC) {
+            
             /* Find adjacent cell possible mines for each value in the SCC */
             Cell currentCell = newField.at(position);
             char value = currentCell.getValue();
@@ -879,32 +881,43 @@ public:
                 combination.push_back(i);
             }
             vector<vector<int>> combinationsThatWork;
+            vector<set<int>> minePositionsAdded;
+            vector<set<int>> clickPositionsAdded;
 
             //Code for first combination
+            set<int> minePositions;
+            set<int> clickPositions;
 
             Field fakeField = newField;
             for (unsigned long i = 0; i < combination.size(); ++i) {
                 fakeField.at(unknownPositions.at(combination.at(i))).update('*');
                 fakeField.foundMine();
             }
-            set<int> fakeClickPositions;
-            bool works = evaluateSCC(fakeField, SCC, fakeClickPositions, true);
+            
+            bool works = evaluateSCC(fakeField, SCC, clickPositions, minePositions, true);
+            
             if (works == true) {
                 combinationsThatWork.push_back(combination);
+                minePositionsAdded.push_back(minePositions);
+                clickPositionsAdded.push_back(clickPositions);
             }
 
             //Loop through the rest of possible combinations
 
             while (advanceCombination(combination, numberOfPositions) == false) {
-                
+                minePositions.clear();
+                clickPositions.clear();
                 fakeField = newField;
                 for (unsigned long i = 0; i < combination.size(); ++i) {
                     fakeField.at(unknownPositions.at(combination.at(i))).update('*');
                     fakeField.foundMine();
                 }
-                bool works = evaluateSCC(fakeField, SCC, fakeClickPositions, true);
+                bool works = evaluateSCC(fakeField, SCC, clickPositions, minePositions, true);
+                
                 if (works == true) {
                     combinationsThatWork.push_back(combination);
+                    minePositionsAdded.push_back(minePositions);
+                    clickPositionsAdded.push_back(clickPositions);
                 }
             }
 
@@ -916,6 +929,45 @@ public:
                     newField.foundMine();
                 }
             }
+            /* If in every possible combination for a number, there are cells from 
+            the resulting deductions that are always the same (either mine or
+            empty), apply those to the field*/
+            else if (combinationsThatWork.size() > 1) {
+                bool addMinePosition = true;
+                for (auto& minePosition : minePositionsAdded.at(0)) {
+                    addMinePosition = true;
+                    for (unsigned long i = 1; i < minePositionsAdded.size(); ++i) {
+                        if (minePositionsAdded.at(i).find(minePosition) == minePositionsAdded.at(i).end()) {
+                            addMinePosition = false;
+                            break;
+                        }
+                    }
+                    if (addMinePosition == true) {
+                        //Add this position as a mine!
+                        //cout << "Found mine!" << endl;
+                        newField.at(minePosition).update('*');
+                        newField.foundMine();
+                        reevaluate = true;
+                    }
+                }
+
+                bool addClickPosition = true;
+                for (auto& clickPosition : clickPositionsAdded.at(0)) {
+                    addClickPosition = true;
+                    for (unsigned long i = 1; i < clickPositionsAdded.size(); ++i) {
+                        if (clickPositionsAdded.at(i).find(clickPosition) == clickPositionsAdded.at(i).end()) {
+                            addClickPosition = false;
+                            break;
+                        }
+                    }
+                    if (addClickPosition == true) {
+                        //Add this position as a click!
+                        //cout << "Found click!" << endl;
+                        newField.at(clickPosition).update('c');
+                        newClickPositions.insert(clickPosition);
+                    }
+                }
+            }
 
 
         }
@@ -924,7 +976,7 @@ public:
         return;
     }
 
-    Field deduction(set<int> &newClickPositions) {
+    Field deduction(set<int> &newClickPositions, bool &reevaluate) {
         Field newField(rows, columns, cells, totalMines);
         newField.setMinesFound(minesFound);
         newField.clearPossibleMines();
@@ -946,9 +998,10 @@ public:
                 }
             }
         }
+        set<int> minePositions;
         for (unsigned long i = 0; i < allSCCs.size(); ++i) {
-            deduceSCC(newField, allSCCs.at(i));
-            evaluateSCC(newField, allSCCs.at(i), newClickPositions);
+            deduceSCC(newField, allSCCs.at(i), newClickPositions, reevaluate);
+            evaluateSCC(newField, allSCCs.at(i), newClickPositions, minePositions);
         }
 
         return newField;
