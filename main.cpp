@@ -438,6 +438,9 @@ int main(int argc, char* argv[]) {
         cin.ignore();
         Field field(rows, columns, values, NUM_MINES);
 
+        //Before we can continue, we need to set how many mines have already been found
+        field.countMinesFound();
+
         cout << "\nLoaded Field:" << endl;
         field.toString();
         cout << endl;

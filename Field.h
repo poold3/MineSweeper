@@ -95,6 +95,16 @@ public:
         return totalMines;
     }
 
+    void countMinesFound() {
+        int mineNumber = 0;
+        for (auto& cell : cells) {
+            if (cell.isMine() == true) {
+                ++mineNumber;
+            }
+        }
+        minesFound = mineNumber;
+    }
+
     void update(int rowPosition, int columnPosition, char value) {
         cells.at((rowPosition * columns) + columnPosition).update(value);
     }
@@ -114,7 +124,7 @@ public:
     }
 
     bool needMoreMines() {
-        /* Return true if all numbers do not have sufficient mines. Return false if all numbers
+        /* Return true if at least one number does not have sufficient mines. Return false if all numbers
         have sufficient mines 
         
         Iteratate through all number cells. See if number of mines present equals the value.
@@ -733,11 +743,11 @@ public:
                         return false;
                     }
                     else if (newField.getMinesFound() > newField.getTotalMines()) {
-                        //cout << "Too many total mines." << endl;
+                        cout << "Too many total mines." << endl;
                         return false;
                     }
                     else if (newField.getMinesFound() == newField.getTotalMines() && newField.needMoreMines() == true) {
-                        //cout << "Need more total mines" << endl;
+                        cout << "Need more total mines" << endl;
                         return false;
                     }
                     /*
@@ -857,7 +867,6 @@ public:
 
     static void deduceSCC(Field &newField, set<int> &SCC, set<int> &newClickPositions, bool &reevaluate) {
         for (auto& position : SCC) {
-            
             /* Find adjacent cell possible mines for each value in the SCC */
             Cell currentCell = newField.at(position);
             char value = currentCell.getValue();
@@ -878,12 +887,12 @@ public:
             */
             int numberOfLoops = valueCopy;
             int numberOfPositions = static_cast<int>(unknownPositions.size());
-
             if (numberOfLoops > 0) {
                 vector<int> combination;
                 for (int i = 0; i < numberOfLoops; ++i) {
                     combination.push_back(i);
                 }
+
                 vector<vector<int>> combinationsThatWork;
                 vector<set<int>> minePositionsAdded;
                 vector<set<int>> clickPositionsAdded;
@@ -891,7 +900,6 @@ public:
                 //Code for first combination
                 set<int> minePositions;
                 set<int> clickPositions;
-
                 Field fakeField = newField;
                 for (unsigned long i = 0; i < combination.size(); ++i) {
                     fakeField.at(unknownPositions.at(combination.at(i))).update('*');
@@ -899,11 +907,8 @@ public:
                 }
                 
                 bool works = evaluateSCC(fakeField, SCC, clickPositions, minePositions, true);
-                
+
                 if (works == true) {
-                    if (numberOfLoops == 0) {
-                        cout << "Zero Loops2" << endl;
-                    }
                     combinationsThatWork.push_back(combination);
                     minePositionsAdded.push_back(minePositions);
                     clickPositionsAdded.push_back(clickPositions);
@@ -912,6 +917,7 @@ public:
                 //Loop through the rest of possible combinations
 
                 while (advanceCombination(combination, numberOfPositions) == false) {
+                    
                     minePositions.clear();
                     clickPositions.clear();
                     fakeField = newField;
@@ -920,7 +926,7 @@ public:
                         fakeField.foundMine();
                     }
                     bool works = evaluateSCC(fakeField, SCC, clickPositions, minePositions, true);
-                    
+
                     if (works == true) {
                         combinationsThatWork.push_back(combination);
                         minePositionsAdded.push_back(minePositions);
