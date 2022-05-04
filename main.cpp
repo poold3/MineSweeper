@@ -26,21 +26,21 @@ void findEmptyCells(set<int> &minePositions, set<int> &cellsVisited, int positio
         int columnPosition = position % NUM_COLUMNS;
         cellsVisited.insert(position);
 
-        // if (position + top + left >= 0 && columnPosition != LEFT_EDGE) {
-        //     if (minePositions.find(position + top + left) == minePositions.end()) {
-        //         findEmptyCells(minePositions, cellsVisited, position + top + left);
-        //     }
-        // }
+        if (position + top + left >= 0 && columnPosition != LEFT_EDGE) {
+            if (minePositions.find(position + top + left) == minePositions.end()) {
+                findEmptyCells(minePositions, cellsVisited, position + top + left);
+            }
+        }
         if (position + top >= 0) {
             if (minePositions.find(position + top) == minePositions.end()) {
                 findEmptyCells(minePositions, cellsVisited, position + top);
             }
         }
-        // if (position + top + right >= 0 && columnPosition != RIGHT_EDGE) {
-        //     if (minePositions.find(position + top + right) == minePositions.end()) {
-        //         findEmptyCells(minePositions, cellsVisited, position + top + right);
-        //     }
-        // }
+        if (position + top + right >= 0 && columnPosition != RIGHT_EDGE) {
+            if (minePositions.find(position + top + right) == minePositions.end()) {
+                findEmptyCells(minePositions, cellsVisited, position + top + right);
+            }
+        }
         if (position + left >= 0  && columnPosition != LEFT_EDGE) {
             if (minePositions.find(position + left) == minePositions.end()) {
                 findEmptyCells(minePositions, cellsVisited, position + left);
@@ -51,21 +51,21 @@ void findEmptyCells(set<int> &minePositions, set<int> &cellsVisited, int positio
                 findEmptyCells(minePositions, cellsVisited, position + right);
             }
         }
-        // if (position + bottom + left < (NUM_ROWS * NUM_COLUMNS) && columnPosition != LEFT_EDGE) {
-        //     if (minePositions.find(position + bottom + left) == minePositions.end()) {
-        //         findEmptyCells(minePositions, cellsVisited, position + bottom + left);
-        //     }
-        // }
+        if (position + bottom + left < (NUM_ROWS * NUM_COLUMNS) && columnPosition != LEFT_EDGE) {
+            if (minePositions.find(position + bottom + left) == minePositions.end()) {
+                findEmptyCells(minePositions, cellsVisited, position + bottom + left);
+            }
+        }
         if (position + bottom < (NUM_ROWS * NUM_COLUMNS)) {
             if (minePositions.find(position + bottom) == minePositions.end()) {
                 findEmptyCells(minePositions, cellsVisited, position + bottom);
             }
         }
-        // if (position + bottom + right < (NUM_ROWS * NUM_COLUMNS) && columnPosition != RIGHT_EDGE) {
-        //     if (minePositions.find(position + bottom + right) == minePositions.end()) {
-        //         findEmptyCells(minePositions, cellsVisited, position + bottom + right);
-        //     }
-        // }
+        if (position + bottom + right < (NUM_ROWS * NUM_COLUMNS) && columnPosition != RIGHT_EDGE) {
+            if (minePositions.find(position + bottom + right) == minePositions.end()) {
+                findEmptyCells(minePositions, cellsVisited, position + bottom + right);
+            }
+        }
 
     }
 
@@ -288,7 +288,6 @@ int main(int argc, char* argv[]) {
         //We will create out own custom minefield.
         srand (time(NULL));
         set<int> minePositions = createMinePositions();
-        //set<int> minePositions = {2, 6, 15, 23, 30, 33, 39, 40, 47, 52, 59, 68, 94, 96, 114, 116, 131, 147, 152, 168, 170, 176, 180, 183, 186, 197, 198, 202, 208, 211, 219, 221, 228, 230, 246, 261, 270, 277, 292, 299, 302, 308, 325, 328, 332, 368, 372, 391, 402, 405, 420, 429, 444, 445, 446, 447, 450, 457, 460, 465, 466, 470, 481, 484, 498, 514, 519, 523, 525, 538, 539, 541, 560, 569, 574};
         vector<char> values;
         for (int i = 0; i < (NUM_ROWS * NUM_COLUMNS); ++i) {
             if (minePositions.find(i) == minePositions.end()) {
