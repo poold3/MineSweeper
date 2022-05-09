@@ -70,6 +70,7 @@ The second field shows the field after all the numbers are generated around the 
 ### Notes on Deduction
 While observing the solver work, you may notice the words "Trying Deductions" beign outputted. This occurs when the solver can gain no immediate information from the field. In other words, there are not cells which the solver can automatically flag as a mine. This happens when every number cell with surrounding unknown cells has more unknown cells than the value of the number in the number cell.
 At this point, the solver enters a brute force algorithm that tests every possible combination of mine placement around every number cell. If it can eliminate all combinations except one for a single number cell, then the solver knows that it found the right combination.
+Even if the solver cannot narrow the combinations of mines around a number cell down to a single combination, further information can be gleaned from the brute force method by tracking if a cell is always labeled as a mine or as an empty cell regardless of the combination of mines.
 If you would like to see where this logic is taking place, see lines 724-749 in `Field.h`. Please note that tracking the number of mines found so far and comparing that to the total number of mines known to be in the field is a valid method of solving MineSweeper.
 ### Notes on SCC
 To increase the efficiency of this program, the solver does not iterate through the entire field at once when trying to solve the program. Rather, the program will generate SCCs and the iterate through each SCC.
