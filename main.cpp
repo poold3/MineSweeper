@@ -298,11 +298,12 @@ int main(int argc, char* argv[]) {
             }
         }
         Field keyField(NUM_ROWS, NUM_COLUMNS, values, NUM_MINES);
-        keyField.toString();
-        cout << endl;
-        keyField.generateNumberCells();
+        cout << "The Key Field:" << endl << endl;
         // keyField.toString();
         // cout << endl;
+        keyField.generateNumberCells();
+        keyField.toString();
+        cout << endl;
         // return 0;
         Field gameField;
         try {

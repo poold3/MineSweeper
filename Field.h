@@ -462,7 +462,7 @@ public:
 
             }
             else if (keyCells.at(position).isMine() == true) {
-                string error = "KABOOM!";
+                string error = "KABOOM! You bumbed a mine which exploded and caused a massive chain reaction in which all of the mines exploded! You died :(";
                 throw std::invalid_argument(error);
             }
             else {
